@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyCacheHelpers", "LazyCacheHelpers\LazyCacheHelpers.csproj", "{0CCE1968-C293-4E93-BEFD-DF381748CF8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyCacheHelpers.Tests", "LazyCacheHelpers.Tests\LazyCacheHelpers.Tests.csproj", "{252B601E-BC22-4CEF-A248-CD1112A01902}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0CCE1968-C293-4E93-BEFD-DF381748CF8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CCE1968-C293-4E93-BEFD-DF381748CF8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CCE1968-C293-4E93-BEFD-DF381748CF8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CCE1968-C293-4E93-BEFD-DF381748CF8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{252B601E-BC22-4CEF-A248-CD1112A01902}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{252B601E-BC22-4CEF-A248-CD1112A01902}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{252B601E-BC22-4CEF-A248-CD1112A01902}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{252B601E-BC22-4CEF-A248-CD1112A01902}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E6AC7C00-A453-4D8D-8066-CFD04B55664E}
+	EndGlobalSection
+EndGlobal
