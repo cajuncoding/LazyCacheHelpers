@@ -11,8 +11,6 @@ NOTE: A default implementation using .Net MemoryCache is implemented (via defaul
 
 ```
 /*
-Author: Brandon Bernard
-
 MIT License
 
 Copyright (c) 2018
