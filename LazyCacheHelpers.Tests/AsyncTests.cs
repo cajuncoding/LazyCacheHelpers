@@ -70,7 +70,7 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual(result1, result2);
             Assert.AreSame(result1, result2);
 
-            SampleCacheFacade.RemoveCachedData(key);
+            TestCacheFacade.RemoveCachedData(key);
 
             //Since it's removed then it MUST be newly Initialized
             //  resulting in a Different Result being returned from Result1
@@ -105,7 +105,7 @@ namespace LazyCacheHelpersTests
 
         public static async Task<string> GetTestDataWithCachingAsync(string key)
         {
-            return await SampleCacheFacade.GetCachedDataAsync(key, async () =>
+            return await TestCacheFacade.GetCachedDataAsync(key, async () =>
             {
                 return await SomeLongRunningMethodAsync(DateTime.Now);
             });
@@ -113,7 +113,7 @@ namespace LazyCacheHelpersTests
 
         public static async Task<string> GetTestDataWithCachingAndTTLAsync(string key, int secondsTTL)
         {
-            return await SampleCacheFacade.GetCachedDataAsync(
+            return await TestCacheFacade.GetCachedDataAsync(
                 key, 
                 async () =>
                 {

@@ -16,7 +16,7 @@ namespace LazyCacheHelpersTests
     /// Cache Keys, etc. with a more simplified Facade interface to de-couple and simplify the rest of the
     /// consuming code within the application.
     /// </summary>
-    public class SampleCacheFacade
+    public class TestCacheFacade
     {
         public static string GetCachedData(string cacheKeyVariable, Func<string> fnValueFactory, int secondsTTL = 60)
         {
