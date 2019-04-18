@@ -8,6 +8,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LazyCacheHelpersTests
 {
+
+    /// <summary>
+    /// BBernard
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
+    /// ASYNC Tests for Async support of LazyCacheHelpers
+    /// 
+    /// Unit Tests for LazyCacheHandler classes to demo and validate functionality
+    /// 
+    /// </summary>
     [TestClass]
     public class AsyncTests
     {
@@ -60,7 +70,7 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual(result1, result2);
             Assert.AreSame(result1, result2);
 
-            DemoCacheHelper.RemoveCachedData(key);
+            SampleCacheFacade.RemoveCachedData(key);
 
             //Since it's removed then it MUST be newly Initialized
             //  resulting in a Different Result being returned from Result1
@@ -95,7 +105,7 @@ namespace LazyCacheHelpersTests
 
         public static async Task<string> GetTestDataWithCachingAsync(string key)
         {
-            return await DemoCacheHelper.GetCachedDataAsync(key, async () =>
+            return await SampleCacheFacade.GetCachedDataAsync(key, async () =>
             {
                 return await SomeLongRunningMethodAsync(DateTime.Now);
             });
@@ -103,7 +113,7 @@ namespace LazyCacheHelpersTests
 
         public static async Task<string> GetTestDataWithCachingAndTTLAsync(string key, int secondsTTL)
         {
-            return await DemoCacheHelper.GetCachedDataAsync(
+            return await SampleCacheFacade.GetCachedDataAsync(
                 key, 
                 async () =>
                 {

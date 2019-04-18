@@ -7,6 +7,8 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
     /// Class to support reading cache configuration values from Configuration (e.g. TTL Seconds defined in Configuration).
     /// </summary>
     public class LazyCacheConfig

@@ -10,6 +10,15 @@ namespace LazyCacheHelpersTests
     [TestClass]
     public class SyncTests
     {
+        /// <summary>
+        /// BBernard
+        /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+        /// 
+        /// Synchronouse Tests for LazyCacheHelpers
+        /// 
+        /// Unit Tests for LazyCacheHandler classes to demo and validate functionality
+        /// 
+        /// </summary>
         [TestMethod]
         public void TestCacheHits()
         {
@@ -59,7 +68,7 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual(result1, result2);
             Assert.AreSame(result1, result2);
 
-            DemoCacheHelper.RemoveCachedData(key);
+            SampleCacheFacade.RemoveCachedData(key);
 
             //Since it's removed then it MUST be newly Initialized
             //  resulting in a Different Result being returned from Result1
@@ -93,7 +102,7 @@ namespace LazyCacheHelpersTests
 
         public static string GetTestDataWithCaching(string key)
         {
-            return DemoCacheHelper.GetCachedData(key, () =>
+            return SampleCacheFacade.GetCachedData(key, () =>
             {
                 return SomeLongRunningMethod(DateTime.Now);
             });
@@ -101,7 +110,7 @@ namespace LazyCacheHelpersTests
 
         public static string GetTestDataWithCachingAndTTL(string key, int secondsTTL)
         {
-            return DemoCacheHelper.GetCachedData(
+            return SampleCacheFacade.GetCachedData(
                 key, 
                 () =>
                 {

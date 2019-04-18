@@ -6,6 +6,8 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
     /// Class to support creating cache expiration Policies with helpers to simplify the Expiration policy creation and even advanced elements
     /// such as providing random distribution of cache expirations for environments that have high load scenarios and many/multiple cache items
     /// that may expire at the same time.

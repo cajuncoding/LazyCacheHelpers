@@ -7,6 +7,18 @@ using System.Runtime.Caching;
 
 namespace LazyCacheHelpers
 {
+    /// <summary>
+    /// BBernard
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
+    /// This class provides simple way to get started with teh LazyCacheHandler by implementing an easy to use 
+    /// Default instance of LazyCacheHandler that supports generic caching of any data with any CacheKey.
+    /// 
+    /// Static implementation follows similar patterns for applications to quickly consume the default cache implementation which
+    /// uses the .Net Memory Cache (via LazyDotNetMemoryCacheRepository) for underlying cache storage with all of the benefits
+    /// of self-populating cache and lazy initialization as implemented by the LazyCacheHandler class.
+    /// 
+    /// </summary>
     public static class DefaultLazyCache
     {
         //Added methods to CacheHelper to work with MemoryCache more easily.

@@ -7,7 +7,16 @@ using LazyCacheHelpers;
 
 namespace LazyCacheHelpersTests
 {
-    public class DemoCacheHelper
+    /// <summary>
+    /// BBernad
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
+    /// Sample Facade class to illustrate how a real applicaion might utilize LazyCacheHelpers classes in
+    /// their own context with a CacheHelper that wraps it up and handles things like Cache Configurations,
+    /// Cache Keys, etc. with a more simplified Facade interface to de-couple and simplify the rest of the
+    /// consuming code within the application.
+    /// </summary>
+    public class SampleCacheFacade
     {
         public static string GetCachedData(string cacheKeyVariable, Func<string> fnValueFactory, int secondsTTL = 60)
         {

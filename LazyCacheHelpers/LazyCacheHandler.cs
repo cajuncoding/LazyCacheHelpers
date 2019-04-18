@@ -6,6 +6,8 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
     /// LazyCache Handler for easy cache implementations at all layers of an application with support for both Sync & Async
     /// Lazy operations to maximize server utilization and performance!
     /// 

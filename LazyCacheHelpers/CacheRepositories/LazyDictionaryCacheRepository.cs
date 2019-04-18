@@ -6,6 +6,8 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
+    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// 
     /// Facade implementaiton for Local in-memory Dictionary based static cache for the LazyCacheHandler.
     /// This allows lazy initialization and self-populating flow to be implemented on top of a very lightweight
     /// simplified dictionary based cache storage mechanism.
