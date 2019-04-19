@@ -15,13 +15,13 @@ namespace LazyCacheHelpersTests
     /// </summary>
     public class TestCacheFacade
     {
-        public static string GetCachedData(TestCacheParams cacheParams, Func<string> fnValueFactory, int secondsTTL = 60)
+        public static string GetCachedData(ILazyCacheParams cacheParams, Func<string> fnValueFactory, int secondsTTL = 60)
         {
             var result = DefaultLazyCache.GetOrAddFromCache(cacheParams, fnValueFactory, cacheParams);
             return result;
         }
 
-        public static async Task<string> GetCachedDataAsync(TestCacheParams cacheParams, Func<Task<string>> fnValueFactory)
+        public static async Task<string> GetCachedDataAsync(ILazyCacheParams cacheParams, Func<Task<string>> fnValueFactory)
         {
             var result = await DefaultLazyCache.GetOrAddFromCacheAsync<ILazyCacheKey, string>(
                 cacheParams,
@@ -37,9 +37,8 @@ namespace LazyCacheHelpersTests
             return result;
         }
 
-        public static void RemoveCachedData(string cacheKeyVariable)
+        public static void RemoveCachedData(ILazyCacheKey cacheKey)
         {
-            var cacheKey = new TestCacheParams(cacheKeyVariable);
             DefaultLazyCache.RemoveFromCache(cacheKey);
         }
     }

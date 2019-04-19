@@ -4,7 +4,7 @@ using LazyCacheHelpers;
 
 namespace LazyCacheHelpersTests
 {
-    public class TestCacheParams : ILazyCacheKey, ILazyCachePolicy
+    public class TestCacheParams : ILazyCacheParams
     {
         private string _variableName = String.Empty;
         private TimeSpan _ttlOverrideTimeSpan = TimeSpan.MinValue;

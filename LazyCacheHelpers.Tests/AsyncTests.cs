@@ -71,7 +71,7 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual(result1, result2);
             Assert.AreSame(result1, result2);
 
-            TestCacheFacade.RemoveCachedData(key);
+            TestCacheFacade.RemoveCachedData(new TestCacheParams(key));
 
             //Since it's removed then it MUST be newly Initialized
             //  resulting in a Different Result being returned from Result1

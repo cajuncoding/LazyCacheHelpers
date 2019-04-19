@@ -118,6 +118,5 @@ namespace LazyCacheHelpers
         {
             _lazyCache.RemoveFromCache(key);
         }
-
     }
 }
