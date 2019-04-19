@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -101,7 +102,57 @@ namespace LazyCacheHelpersTests
             Assert.AreNotSame(result1, result3);
         }
 
+        [TestMethod]
+        public async Task TestCacheThreadSafetyWithLazyInitializationAsync()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheThreadSafetyWithLazyInitializationAsync)}]";
+            int secondsTTL = 300;
+            int threadCount = 20;
+            var globalCount = 0;
+            var timer = Stopwatch.StartNew();
+
+            var tasks = new List<Task<string>>();
+            for (int x = 0; x < threadCount; x++)
+            {
+                //Simulated MANY threads running at the same time attempting to get the same data for the same Cache key!!!
+                tasks.Add(Task.Run(async () =>
+                {
+                    //THIS RUNS ON IT'S OWN THREAD, but the Lazy Cache initialization will ensure that the Value Factory Function
+                    //  is only executed by the FIRST thread, and all other threads will immediately benefit from the result!
+                    return await TestCacheFacade.GetCachedDataAsync(key, async () =>
+                        {
+                            //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+                            //  meaning globalCount is only ever incremented 1 time!
+                            Interlocked.Increment(ref globalCount);
+
+                            //TEST that the cached data is never re-generated so only ONE Value is ever created!
+                            var longTaskResult = await SomeLongRunningMethodAsync(DateTime.Now);
+                            return longTaskResult;
+                        },
+                        secondsTTL
+                    );
+                }));
+            }
+
+            //Allow all threads to complete and get the results...
+            var results = await Task.WhenAll(tasks.ToArray());
+            var distinctCount = results.Distinct().Count();
+            timer.Stop();
+
+            //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+            //  meaning globalCount is only ever incremented 1 time!
+            Assert.AreEqual(1, globalCount);
+
+            //Ensure ONLY ONE item was ever generated and ALL other's were identical from Cache!
+            Assert.AreEqual(1, distinctCount);
+
+            //Ensure that the Total time takes barely longer than one iteration of the Long Running Task!
+            Assert.IsTrue(timer.ElapsedMilliseconds < (LongRunningTaskMillis * 2));
+        }
+
         #region Private Helpers
+
+        protected static readonly int LongRunningTaskMillis = 1000;
 
         public static async Task<string> GetTestDataWithCachingAsync(string key)
         {
@@ -128,7 +179,7 @@ namespace LazyCacheHelpersTests
         {
             //SOME Code that takes A LOT of time and/or work to compute/retrieve/etc. or never changes?
             //ASYNC Sleep to simulate long running Async Task!
-            await Task.Delay(1000);
+            await Task.Delay(LongRunningTaskMillis);
 
             var guid = Guid.NewGuid();
             var dateTimeString = XmlConvert.ToString(dateTimeParam, XmlDateTimeSerializationMode.Utc);
