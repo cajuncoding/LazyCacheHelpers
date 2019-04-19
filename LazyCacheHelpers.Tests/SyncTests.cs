@@ -117,18 +117,16 @@ namespace LazyCacheHelpersTests
                 {
                     //THIS RUNS ON IT'S OWN THREAD, but the Lazy Cache initialization will ensure that the Value Factory Function
                     //  is only executed by the FIRST thread, and all other threads will immediately benefit from the result!
-                    return TestCacheFacade.GetCachedData(key, () =>
-                        {
-                            //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
-                            //  meaning globalCount is only ever incremented 1 time!
-                            Interlocked.Increment(ref globalCount);
+                    return TestCacheFacade.GetCachedData(new TestCacheParams(key, secondsTTL), () =>
+                    {
+                        //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+                        //  meaning globalCount is only ever incremented 1 time!
+                        Interlocked.Increment(ref globalCount);
 
-                            //TEST that the cached data is never re-generated so only ONE Value is ever created!
-                            var longTaskResult = SomeLongRunningMethod(DateTime.Now);
-                            return longTaskResult;
-                        },
-                        secondsTTL
-                    );
+                        //TEST that the cached data is never re-generated so only ONE Value is ever created!
+                        var longTaskResult = SomeLongRunningMethod(DateTime.Now);
+                        return longTaskResult;
+                    });
                 }));
             }
 
@@ -154,7 +152,7 @@ namespace LazyCacheHelpersTests
 
         public static string GetTestDataWithCaching(string key)
         {
-            return TestCacheFacade.GetCachedData(key, () =>
+            return TestCacheFacade.GetCachedData(new TestCacheParams(key), () =>
             {
                 return SomeLongRunningMethod(DateTime.Now);
             });
@@ -163,12 +161,11 @@ namespace LazyCacheHelpersTests
         public static string GetTestDataWithCachingAndTTL(string key, int secondsTTL)
         {
             return TestCacheFacade.GetCachedData(
-                key, 
+                new TestCacheParams(key, secondsTTL), 
                 () =>
                 {
                     return SomeLongRunningMethod(DateTime.Now);
-                },
-                secondsTTL
+                }
             );
         }
 

@@ -54,9 +54,11 @@
     <Compile Include="AsyncTests.cs" />
     <Compile Include="SyncTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestCacheFacade.cs" />
+    <Compile Include="TestCacheFacade\TestCacheFacade.cs" />
+    <Compile Include="TestCacheFacade\TestCacheParams.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

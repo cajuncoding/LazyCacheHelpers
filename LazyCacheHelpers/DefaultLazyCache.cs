@@ -43,12 +43,50 @@ namespace LazyCacheHelpers
         /// <typeparam name="TValue"></typeparam>
         /// <param name="key"></param>
         /// <param name="fnValueFactory"></param>
-        /// <param name="cacheItemPolicy"></param>
+        /// <param name="cachePolicyFactory"></param>
         /// <returns></returns>
-        public static TValue GetOrAddFromCache<TKey, TValue>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy) 
+        public static TValue GetOrAddFromCache<TKey, TValue>(TKey key, Func<TValue> fnValueFactory, ILazyCachePolicy cachePolicyFactory) 
             where TValue: class
         {
+            TValue result = GetOrAddFromCache(key, fnValueFactory, cachePolicyFactory.GeneratePolicy());
+            return result;
+        }
+
+        /// <summary>
+        /// BBernard
+        /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
+        /// This method ensures that the item is intialized with full thread safety and that only one thread ever executes the work
+        /// to initialize the item to be cached -- significantly improving server utilization and performance.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="fnValueFactory"></param>
+        /// <param name="cacheItemPolicy"></param>
+        /// <returns></returns>
+        public static TValue GetOrAddFromCache<TKey, TValue>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy)
+            where TValue : class
+        {
             return (TValue)_lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy);
+        }
+
+        /// <summary>
+        /// BBernard
+        /// Add or update the cache with the specified cache key and item that will be Lazy Initialized Asynchronously from Lambda function/logic.
+        /// This method ensures that the item is intialized with full thread safety and that only one thread ever executes the work
+        /// to initialize the item to be cached -- significantly improving server utilization and performance.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="fnAsyncValueFactory"></param>
+        /// <param name="cachePolicyFactory"></param>
+        /// <returns></returns>
+        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<object>> fnAsyncValueFactory, ILazyCachePolicy cachePolicyFactory)
+            where TValue : class
+        {
+            TValue result = await GetOrAddFromCacheAsync<TKey, TValue>(key, fnAsyncValueFactory, cachePolicyFactory.GeneratePolicy());
+            return result;
         }
 
         /// <summary>

@@ -119,18 +119,16 @@ namespace LazyCacheHelpersTests
                 {
                     //THIS RUNS ON IT'S OWN THREAD, but the Lazy Cache initialization will ensure that the Value Factory Function
                     //  is only executed by the FIRST thread, and all other threads will immediately benefit from the result!
-                    return await TestCacheFacade.GetCachedDataAsync(key, async () =>
-                        {
-                            //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
-                            //  meaning globalCount is only ever incremented 1 time!
-                            Interlocked.Increment(ref globalCount);
+                    return await TestCacheFacade.GetCachedDataAsync(new TestCacheParams(key, secondsTTL), async () =>
+                    {
+                        //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+                        //  meaning globalCount is only ever incremented 1 time!
+                        Interlocked.Increment(ref globalCount);
 
-                            //TEST that the cached data is never re-generated so only ONE Value is ever created!
-                            var longTaskResult = await SomeLongRunningMethodAsync(DateTime.Now);
-                            return longTaskResult;
-                        },
-                        secondsTTL
-                    );
+                        //TEST that the cached data is never re-generated so only ONE Value is ever created!
+                        var longTaskResult = await SomeLongRunningMethodAsync(DateTime.Now);
+                        return longTaskResult;
+                    });
                 }));
             }
 
@@ -156,7 +154,7 @@ namespace LazyCacheHelpersTests
 
         public static async Task<string> GetTestDataWithCachingAsync(string key)
         {
-            return await TestCacheFacade.GetCachedDataAsync(key, async () =>
+            return await TestCacheFacade.GetCachedDataAsync(new TestCacheParams(key), async () =>
             {
                 return await SomeLongRunningMethodAsync(DateTime.Now);
             });
@@ -165,13 +163,12 @@ namespace LazyCacheHelpersTests
         public static async Task<string> GetTestDataWithCachingAndTTLAsync(string key, int secondsTTL)
         {
             return await TestCacheFacade.GetCachedDataAsync(
-                key, 
+                new TestCacheParams(key, secondsTTL), 
                 async () =>
                 {
                     string result = await SomeLongRunningMethodAsync(DateTime.Now);
                     return result;
-                },
-                secondsTTL
+                }
             );
         }
 

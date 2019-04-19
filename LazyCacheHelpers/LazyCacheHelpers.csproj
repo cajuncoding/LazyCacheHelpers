@@ -46,6 +46,7 @@
     <Compile Include="CacheHelpers\LazyCacheConfig.cs" />
     <Compile Include="CacheHelpers\LazyCachePolicy.cs" />
     <Compile Include="CacheInterfaces\ILazyCacheHandler.cs" />
+    <Compile Include="CacheInterfaces\ILazyCachePolicy.cs" />
     <Compile Include="CacheInterfaces\ILazyCacheKey.cs" />
     <Compile Include="CacheInterfaces\ILazyCacheRepository.cs" />
     <Compile Include="CacheRepositories\LazyDictionaryCacheRepository.cs" />
