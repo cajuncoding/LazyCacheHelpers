@@ -16,7 +16,7 @@ namespace LazyCacheHelpers
         //Provide a reference to the Default Minimum Cache TTL we enforce; to make code more readable.
         public static readonly TimeSpan DefaultMinimumCacheTTL = TimeSpan.FromSeconds(60);
         //Provide a reference to Never Cache TTL; to make code more readable.
-        public static readonly TimeSpan NeverCacheTTL = TimeSpan.FromSeconds(0);
+        public static readonly TimeSpan NeverCacheTTL = TimeSpan.Zero;
         //Provide a reference to the Maximum/Forever Cache TTL; to make code more readable.
         public static readonly TimeSpan ForeverCacheTTL = TimeSpan.MaxValue;
 
@@ -29,16 +29,23 @@ namespace LazyCacheHelpers
         private static ConcurrentDictionary<string, Lazy<TimeSpan>> _cacheTTLDictionary = new ConcurrentDictionary<string, Lazy<TimeSpan>>();
 
         /// <summary>
-        /// Initialize the Cache TTL Seconds from Configuration in a fully ThreadSafe way.
-        /// NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> threadsafe
-        ///         initializers to Guarantee that the initialization code is only every called once, while offerring great perfromance
-        ///         for all subsequent readers of the value!
+        /// Initialize the Cache TTL Seconds from Configuration in a fully ThreadSafe way by finding the configuration value
+        /// of the first valid config key specified; searching in the order defined int the array.
         /// </summary>
         /// <param name="configName"></param>
         /// <returns></returns>
-        public static TimeSpan GetCacheTTLFromConfig(string configName)
+        public static TimeSpan GetCacheTTLFromConfig(string[] configKeysToSearch, TimeSpan defaultMinimumTTL)
         {
-            return GetCacheTTLFromConfig(configName, DefaultMinimumCacheTTL);
+            foreach (var configKey in configKeysToSearch)
+            {
+                var timeSpanToLive = LazyCacheConfig.GetCacheTTLFromConfig(configKey, LazyCacheConfig.NeverCacheTTL);
+                if (timeSpanToLive.TotalMilliseconds > 0)
+                {
+                    return timeSpanToLive;
+                }
+            }
+
+            return defaultMinimumTTL;
         }
 
         /// <summary>
@@ -61,14 +68,14 @@ namespace LazyCacheHelpers
             var cacheTTLLazyInitializer = _cacheTTLDictionary.GetOrAdd(configName, key =>
                 new Lazy<TimeSpan>(() =>
                 {
-                    var configTTLSeconds = SafelyReadTTLSecondsConfigValue(configName);
+                    var configTTLSeconds = SafelyReadTTLConfigValue(configName);
 
                     //Always enforce our own internal Default Minimum cache value, which the caller can specify
                     //  to be anything they want for advanced use-case logic.
-                    var cacheTimeToLiveSeconds = Math.Max(configTTLSeconds, defaultMinimumTTL.TotalSeconds);
+                    var cacheTimeToLiveSeconds = configTTLSeconds > defaultMinimumTTL ? configTTLSeconds : defaultMinimumTTL;
 
                     //Return the final TimeSpan after computing the value from Configuration
-                    return TimeSpan.FromSeconds(cacheTimeToLiveSeconds);
+                    return cacheTimeToLiveSeconds;
                 })
             );
 
@@ -83,18 +90,30 @@ namespace LazyCacheHelpers
         /// </summary>
         /// <param name="configKeyName"></param>
         /// <returns></returns>
-        private static int SafelyReadTTLSecondsConfigValue(String configKeyName)
+        private static TimeSpan SafelyReadTTLConfigValue(String configKeyName)
         {
             var appSettings = ConfigurationManager.AppSettings;
             String configValue = appSettings[configKeyName];
 
-            int ttlSeconds = int.MinValue;
-            if (!String.IsNullOrEmpty(configValue))
+            //If not defined return Zero
+            if (string.IsNullOrEmpty(configValue))
             {
-                Int32.TryParse(configValue, out ttlSeconds);
+                return TimeSpan.Zero;
             }
-
-            return ttlSeconds;
+            //If it contains a Colon then parse the TimeSpan
+            else if (configValue.Contains(":"))
+            {
+                var ttlTimeSpan = TimeSpan.Zero;
+                TimeSpan.TryParse(configValue, out ttlTimeSpan);
+                return ttlTimeSpan;
+            }
+            //If it does not contain a Colon ':' then parse as Integer Seconds
+            else
+            {
+                int ttlSeconds = 0;
+                Int32.TryParse(configValue, out ttlSeconds);
+                return TimeSpan.FromSeconds(ttlSeconds);
+            }
         }
 
         #endregion

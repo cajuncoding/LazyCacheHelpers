@@ -7,7 +7,7 @@ namespace LazyCacheHelpersTests
     public class TestCacheParams : ILazyCacheParams
     {
         private string _variableName = String.Empty;
-        private TimeSpan _ttlOverrideTimeSpan = TimeSpan.MinValue;
+        private TimeSpan _ttlOverrideTimeSpan = TimeSpan.Zero;
 
         /// <summary>
         /// Create Cache Params with default TTL dynamically loaded from App Config.
@@ -36,16 +36,21 @@ namespace LazyCacheHelpersTests
 
         public CacheItemPolicy GeneratePolicy()
         {
-            var configKey = $"CacheTTL.{nameof(TestCacheParams)}";
+            var configKeys = new string[] {
+                $"CacheTTL.{Guid.NewGuid()}.NEVER_FOUND",
+                $"CacheTTL.{nameof(TestCacheParams)}",
+                $"CacheTTL.Default"
+            };
+
             //Compute/Load the TTL from Configuration or from static class values, etc.
             //NOTE: During high load the cache timings could be Distributed to prevent multiple misses at one time.
             //var timeSpanTTL = TimeSpan.FromSeconds(300);
             //var timeSpanTTL = LazyCachePolicy.RandomizeCacheTTLDistribution(TimeSpan.FromSeconds(secondsTTL), 60);
             //var timeSpanTTL = LazyCacheConfig.GetCacheTTLFromConfig(configKey);
 
-            if (_ttlOverrideTimeSpan == TimeSpan.MinValue)
+            if (_ttlOverrideTimeSpan == TimeSpan.Zero)
             {
-                return LazyCachePolicy.NewAbsoluteExpirationPolicy(configKey);
+                return LazyCachePolicy.NewAbsoluteExpirationPolicy(configKeys);
             }
             else
             {

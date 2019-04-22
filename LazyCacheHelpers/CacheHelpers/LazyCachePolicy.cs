@@ -16,15 +16,39 @@ namespace LazyCacheHelpers
     {
         /// <summary>
         /// Helper method to more easily create an Absolute Expiration CacheItemPolicy directly from a Configuration
+        /// Parameter names that has the TTL Seconds; this will return the first identified valid configuration key.
+        /// </summary>
+        /// <param name="cacheTimeSpanToLive"></param>
+        /// <param name="callbackWhenCacheEntryRemoved"></param>
+        /// <returns></returns>
+        public static CacheItemPolicy NewAbsoluteExpirationPolicy(string[] ttlConfigKeysToSearch, Action<CacheEntryRemovedArguments> callbackWhenCacheEntryRemoved = null)
+        {
+            var timeSpanToLive = LazyCacheConfig.GetCacheTTLFromConfig(ttlConfigKeysToSearch, LazyCacheConfig.NeverCacheTTL);
+            if (timeSpanToLive.TotalMilliseconds > 0)
+            {
+                return NewAbsoluteExpirationPolicy(timeSpanToLive, callbackWhenCacheEntryRemoved);
+            }
+
+            //Finally return the cache policy for the first identified valid configuration key.
+            return null;
+        }
+
+        /// <summary>
+        /// Helper method to more easily create an Absolute Expiration CacheItemPolicy directly from a Configuration
         /// Parameter name that has the TTL Seconds; with Default fallback if it does not exist.
         /// </summary>
         /// <param name="cacheTimeSpanToLive"></param>
         /// <param name="callbackWhenCacheEntryRemoved"></param>
         /// <returns></returns>
-        public static CacheItemPolicy NewAbsoluteExpirationPolicy(string ttlSecondsConfigName, Action<CacheEntryRemovedArguments> callbackWhenCacheEntryRemoved = null)
+        public static CacheItemPolicy NewAbsoluteExpirationPolicy(string ttlSecondsConfigKey, Action<CacheEntryRemovedArguments> callbackWhenCacheEntryRemoved = null)
         {
-            var timeSpanToLive = LazyCacheConfig.GetCacheTTLFromConfig(ttlSecondsConfigName);
-            return NewAbsoluteExpirationPolicy(timeSpanToLive, callbackWhenCacheEntryRemoved);
+            var timeSpanToLive = LazyCacheConfig.GetCacheTTLFromConfig(ttlSecondsConfigKey, LazyCacheConfig.NeverCacheTTL);
+            if (timeSpanToLive.TotalMilliseconds > 0)
+            {
+                return NewAbsoluteExpirationPolicy(timeSpanToLive, callbackWhenCacheEntryRemoved);
+            }
+
+            return null;
         }
 
         /// <summary>

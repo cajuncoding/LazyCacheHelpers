@@ -64,7 +64,7 @@ namespace LazyCacheHelpers
         /// <param name="fnValueFactory"></param>
         /// <param name="cacheItemPolicy"></param>
         /// <returns></returns>
-        public TValue GetOrAddFromCache<TKey>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy)
+        public virtual TValue GetOrAddFromCache<TKey>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy)
         {
             //We support eitehr ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
             //  impelmentation creates a valid unique Key for us, so here we initialize the Cache Key to use.
@@ -128,7 +128,7 @@ namespace LazyCacheHelpers
         /// <param name="fnAsyncValueFactory"></param>
         /// <param name="cacheItemPolicy"></param>
         /// <returns></returns>
-        public async Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<TValue>> fnAsyncValueFactory, CacheItemPolicy cacheItemPolicy)
+        public virtual async Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<TValue>> fnAsyncValueFactory, CacheItemPolicy cacheItemPolicy)
         {
             //We support eitehr ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
             //  impelmentation creates a valid unique Key for us, so here we initialize the Cache Key to use.
@@ -186,7 +186,7 @@ namespace LazyCacheHelpers
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <param name="key"></param>
-        public void RemoveFromCache<TKey>(TKey key)
+        public virtual void RemoveFromCache<TKey>(TKey key)
         {
             //We support eitehr ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
             //  impelmentation creates a valid unique Key for us, so here we initialize the Cache Key to use.
@@ -205,7 +205,7 @@ namespace LazyCacheHelpers
         /// <typeparam name="TKey"></typeparam>
         /// <param name="cacheKeyGenerator"></param>
         /// <returns></returns>
-        private string GenerateCacheKeyHelper<TKey>(TKey cacheKeyGenerator)
+        protected virtual string GenerateCacheKeyHelper<TKey>(TKey cacheKeyGenerator)
         {
             //If Null then throw Argument Exception...
             if (cacheKeyGenerator == null) throw new ArgumentNullException(
