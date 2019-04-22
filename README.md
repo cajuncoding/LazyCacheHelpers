@@ -9,6 +9,40 @@ This class provides a completely ThreadSafe cache with Lazy loading/initializati
 
 NOTE: A default implementation using .Net MemoryCache is implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) to enable working with MemoryCache with greatly simplified support for self-populating (Lazy) initialization.
 
+It's as easy as . . .
+
+**Synchronous Caching:**
+```
+private static readonly string _cacheTTLConfigKey = "CacheTTL.LongRunningProcess";
+
+function ComplexData GetComplexData(string variable)
+{
+	return DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
+		() => {
+			return BuildVeryComplexData();
+		},
+		LazyCachePolicy.NewAbsoluteExpirationPolicy(_cacheTTLConfigKey)
+	);
+}
+```
+
+**Aynchronous Caching:**
+```
+private static readonly string _cacheTTLConfigKey = "CacheTTL.LongRunningProcess";
+
+function async Task<ComplexData> GetComplexDataAsync(string variable)
+{
+	return await DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
+		async () => {
+			return await BuildVeryComplexDataAsync();
+		},
+		LazyCachePolicy.NewAbsoluteExpirationPolicy(_cacheTTLConfigKey)
+	);
+}
+```
+
+
+
 ```
 /*
 MIT License
