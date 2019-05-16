@@ -24,13 +24,6 @@ namespace LazyCacheHelpers
         private static readonly LazyCacheHandler<object> _lazyCache = new LazyCacheHandler<object>();
 
         /// <summary>
-        /// Thread Safe Static Constructor Initializer
-        /// </summary>
-        static DefaultLazyCache()
-        {
-        }
-
-        /// <summary>
         /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
         /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
