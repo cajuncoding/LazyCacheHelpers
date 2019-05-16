@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Concurrent;
 using System.Configuration;
 
@@ -53,7 +52,7 @@ namespace LazyCacheHelpers
         ///     value does not exist or is less than the Default Minimum Value specified.
         /// NOTE: We do this so that we don't have to read the Configuration every time we retrieve the TTL Settings.
         /// NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> threadsafe
-        ///         initializers to Guarantee that the initialization code is only every called once, while offerring great perfromance
+        ///         initializers to Guarantee that the initialization code is only every called once, while offerring great performance
         ///         for all subsequent readers of the value!
         /// </summary>
         /// <param name="configName"></param>
@@ -63,7 +62,7 @@ namespace LazyCacheHelpers
             //The ConcurrentDictionary and Lazy<> initializer provide complete Thread Safety and Guarantee that the code in
             //  our value factory lambda method ONLY EVER RUNS ONCE!
             //NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> threadsafe
-            //        initializers to Guarantee that the initialization code is only every called once, while offerring great perfromance
+            //        initializers to Guarantee that the initialization code is only every called once, while offerring great performance
             //        for all subsequent readers of the value!
             var cacheTTLLazyInitializer = _cacheTTLDictionary.GetOrAdd(configName, key =>
                 new Lazy<TimeSpan>(() =>
@@ -96,9 +95,9 @@ namespace LazyCacheHelpers
             String configValue = appSettings[configKeyName];
 
             //If not defined return Zero
-            if (string.IsNullOrEmpty(configValue))
+            if (string.IsNullOrWhiteSpace(configValue) || configValue.Equals("off", StringComparison.OrdinalIgnoreCase))
             {
-                return TimeSpan.Zero;
+                return NeverCacheTTL;
             }
             //If it contains a Colon then parse the TimeSpan
             else if (configValue.Contains(":"))

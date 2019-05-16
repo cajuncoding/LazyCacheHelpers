@@ -1,6 +1,6 @@
-﻿using System;
+﻿using LazyCacheHelpers;
+using System;
 using System.Threading.Tasks;
-using LazyCacheHelpers;
 
 namespace LazyCacheHelpersTests
 {
@@ -15,7 +15,7 @@ namespace LazyCacheHelpersTests
     /// </summary>
     public class TestCacheFacade
     {
-        public static string GetCachedData(ILazyCacheParams cacheParams, Func<string> fnValueFactory, int secondsTTL = 60)
+        public static string GetCachedData(ILazyCacheParams cacheParams, Func<string> fnValueFactory)
         {
             var result = DefaultLazyCache.GetOrAddFromCache(cacheParams, fnValueFactory, cacheParams);
             return result;
@@ -25,12 +25,7 @@ namespace LazyCacheHelpersTests
         {
             var result = await DefaultLazyCache.GetOrAddFromCacheAsync<ILazyCacheKey, string>(
                 cacheParams,
-                //NOTE: We wrap the value factory Func in a new Lambda to allow enable it to be 
-                //      dynamically down cast to Func<Task<object>> of the underlying generic cache!
-                async () => {
-                    var factoryResult = await fnValueFactory();
-                    return (object)factoryResult;
-                },
+                fnValueFactory,
                 cacheParams
             );
 

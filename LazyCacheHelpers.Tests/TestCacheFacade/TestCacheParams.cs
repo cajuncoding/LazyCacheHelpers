@@ -1,6 +1,6 @@
-﻿using System;
+﻿using LazyCacheHelpers;
+using System;
 using System.Runtime.Caching;
-using LazyCacheHelpers;
 
 namespace LazyCacheHelpersTests
 {
@@ -8,14 +8,16 @@ namespace LazyCacheHelpersTests
     {
         private string _variableName = String.Empty;
         private TimeSpan _ttlOverrideTimeSpan = TimeSpan.Zero;
+        private CacheItemPolicy _overrdieCacheItemPolicy = null;
 
         /// <summary>
         /// Create Cache Params with default TTL dynamically loaded from App Config.
         /// </summary>
         /// <param name="keyNameVariable"></param>
-        public TestCacheParams(String keyNameVariable)
+        public TestCacheParams(String keyNameVariable, CacheItemPolicy overrideCachePolicy = null)
         {
-            this._variableName = keyNameVariable;
+            _variableName = keyNameVariable;
+            _overrdieCacheItemPolicy = overrideCachePolicy;
         }
 
         /// <summary>
@@ -24,8 +26,8 @@ namespace LazyCacheHelpersTests
         /// <param name="keyNameVariable"></param>
         /// <param name="secondsTTL"></param>
         public TestCacheParams(String keyNameVariable, int secondsTTL)
-            : this(keyNameVariable)
         {
+            _variableName = keyNameVariable;
             _ttlOverrideTimeSpan = TimeSpan.FromSeconds(secondsTTL);
         }
 
@@ -48,7 +50,11 @@ namespace LazyCacheHelpersTests
             //var timeSpanTTL = LazyCachePolicy.RandomizeCacheTTLDistribution(TimeSpan.FromSeconds(secondsTTL), 60);
             //var timeSpanTTL = LazyCacheConfig.GetCacheTTLFromConfig(configKey);
 
-            if (_ttlOverrideTimeSpan == TimeSpan.Zero)
+            if (_overrdieCacheItemPolicy != null)
+            {
+                return _overrdieCacheItemPolicy;
+            }
+            else if (_ttlOverrideTimeSpan == TimeSpan.Zero)
             {
                 return LazyCachePolicy.NewAbsoluteExpirationPolicy(configKeys);
             }

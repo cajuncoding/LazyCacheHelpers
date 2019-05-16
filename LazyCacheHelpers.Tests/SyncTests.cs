@@ -1,11 +1,13 @@
-﻿using System;
+﻿using LazyCacheHelpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Collections.Generic;
+using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LazyCacheHelpersTests
 {
@@ -16,7 +18,7 @@ namespace LazyCacheHelpersTests
         /// BBernard
         /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
         /// 
-        /// Synchronouse Tests for LazyCacheHelpers
+        /// Synchronous Tests for LazyCacheHelpers
         /// 
         /// Unit Tests for LazyCacheHandler classes to demo and validate functionality
         /// 
@@ -58,6 +60,46 @@ namespace LazyCacheHelpersTests
 
             //Ensure that ALL Items are Distinctly Different!
             Assert.AreEqual(results.Count, distinctCount);
+        }
+
+        [TestMethod]
+        public void TestCacheMissesBecauseOfDisabledPolicy()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheMissesBecauseOfDisabledPolicy)}]";
+            var result1 = GetTestDataWithCaching(key, LazyCachePolicy.DisabledCachingPolicy);
+            var result2 = GetTestDataWithCaching(key, LazyCachePolicy.DisabledCachingPolicy);
+            var result3 = GetTestDataWithCaching(key, LazyCachePolicy.DisabledCachingPolicy);
+            var result4 = GetTestDataWithCaching(key, LazyCachePolicy.DisabledCachingPolicy);
+
+            Assert.AreNotEqual(result1, result2);
+            Assert.AreNotSame(result1, result2);
+
+            Assert.AreNotEqual(result3, result4);
+            Assert.AreNotSame(result3, result4);
+
+            //Compare First and Last to ensure that ALL are the same!
+            Assert.AreNotEqual(result1, result4);
+            Assert.AreNotSame(result1, result4);
+        }
+
+        [TestMethod]
+        public void TestCacheKeysWithDisabledValues()
+        {
+            var ttlDisabledByOffValue = LazyCacheConfig.GetCacheTTLFromConfig("CacheTTL.Disabled.ByOffValue", LazyCacheConfig.NeverCacheTTL);
+            Assert.AreEqual(ttlDisabledByOffValue, LazyCacheConfig.NeverCacheTTL);
+
+            var ttlDisabledByNegativeValue = LazyCacheConfig.GetCacheTTLFromConfig("CacheTTL.Disabled.ByOffNegativeValue", LazyCacheConfig.NeverCacheTTL);
+            Assert.AreEqual(ttlDisabledByOffValue, LazyCacheConfig.NeverCacheTTL);
+        }
+
+        [TestMethod]
+        public void TestCachePoliciesFromDisabledValues()
+        {
+            var policyDisabledByOffValue = LazyCachePolicy.NewAbsoluteExpirationPolicy("CacheTTL.Disabled.ByOffValue");
+            Assert.IsFalse(LazyCachePolicy.IsPolicyEnabled(policyDisabledByOffValue));
+
+            var policyDisabledByNegativeValue = LazyCachePolicy.NewAbsoluteExpirationPolicy("CacheTTL.Disabled.ByOffNegativeValue");
+            Assert.IsFalse(LazyCachePolicy.IsPolicyEnabled(policyDisabledByNegativeValue));
         }
 
         [TestMethod]
@@ -150,9 +192,9 @@ namespace LazyCacheHelpersTests
 
         protected static readonly int LongRunningTaskMillis = 1000;
 
-        public static string GetTestDataWithCaching(string key)
+        public static string GetTestDataWithCaching(string key, CacheItemPolicy overrideCacheItemPolicy = null)
         {
-            return TestCacheFacade.GetCachedData(new TestCacheParams(key), () =>
+            return TestCacheFacade.GetCachedData(new TestCacheParams(key, overrideCacheItemPolicy), () =>
             {
                 return SomeLongRunningMethod(DateTime.Now);
             });

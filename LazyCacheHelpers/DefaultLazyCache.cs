@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.Caching;
+using System.Threading.Tasks;
 
 namespace LazyCacheHelpers
 {
@@ -36,7 +33,7 @@ namespace LazyCacheHelpers
         /// <summary>
         /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
-        /// This method ensures that the item is intialized with full thread safety and that only one thread ever executes the work
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
@@ -55,7 +52,7 @@ namespace LazyCacheHelpers
         /// <summary>
         /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
-        /// This method ensures that the item is intialized with full thread safety and that only one thread ever executes the work
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
@@ -67,13 +64,16 @@ namespace LazyCacheHelpers
         public static TValue GetOrAddFromCache<TKey, TValue>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy)
             where TValue : class
         {
-            return (TValue)_lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy);
+            TValue result = LazyCachePolicy.IsPolicyEnabled(cacheItemPolicy)
+                                ? (TValue) _lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy)
+                                : fnValueFactory();
+            return result;
         }
 
         /// <summary>
         /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized Asynchronously from Lambda function/logic.
-        /// This method ensures that the item is intialized with full thread safety and that only one thread ever executes the work
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
@@ -82,7 +82,7 @@ namespace LazyCacheHelpers
         /// <param name="fnAsyncValueFactory"></param>
         /// <param name="cachePolicyFactory"></param>
         /// <returns></returns>
-        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<object>> fnAsyncValueFactory, ILazyCachePolicy cachePolicyFactory)
+        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<TValue>> fnAsyncValueFactory, ILazyCachePolicy cachePolicyFactory)
             where TValue : class
         {
             TValue result = await GetOrAddFromCacheAsync<TKey, TValue>(key, fnAsyncValueFactory, cachePolicyFactory.GeneratePolicy());
@@ -92,7 +92,7 @@ namespace LazyCacheHelpers
         /// <summary>
         /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized Asynchronously from Lambda function/logic.
-        /// This method ensures that the item is intialized with full thread safety and that only one thread ever executes the work
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
@@ -101,11 +101,18 @@ namespace LazyCacheHelpers
         /// <param name="fnAsyncValueFactory"></param>
         /// <param name="cacheItemPolicy"></param>
         /// <returns></returns>
-        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<object>> fnAsyncValueFactory, CacheItemPolicy cacheItemPolicy) 
+        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<TValue>> fnAsyncValueFactory, CacheItemPolicy cacheItemPolicy) 
             where TValue : class
         {
-            var value = await _lazyCache.GetOrAddFromCacheAsync(key, fnAsyncValueFactory, cacheItemPolicy);
-            return (TValue)value;
+            //Because the underlying cache is set up to store any object and the async coercion isn't as easy as the synchronous,
+            //  we must wrap the original generics typed async factory into a new Func<> that matches the required type.
+            var wrappedFnValueFactory = new Func<Task<object>>(async () => await fnAsyncValueFactory());
+
+            TValue result = LazyCachePolicy.IsPolicyEnabled(cacheItemPolicy)
+                                ? (TValue) await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory, cacheItemPolicy)
+                                : await fnAsyncValueFactory();
+
+            return result;
         }
 
         /// <summary>

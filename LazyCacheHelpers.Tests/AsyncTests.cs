@@ -1,11 +1,13 @@
-﻿using System;
+﻿using LazyCacheHelpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Collections.Generic;
+using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LazyCacheHelpersTests
 {
@@ -59,6 +61,27 @@ namespace LazyCacheHelpersTests
 
             //Ensure that ALL Items are Distinctly Different!
             Assert.AreEqual(results.Count, distinctCount);
+        }
+
+
+        [TestMethod]
+        public async Task TestCacheMissesBecauseOfDisabledPolicyAsync()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheMissesBecauseOfDisabledPolicyAsync)}]";
+            var result1 = await GetTestDataWithCachingAsync(key, LazyCachePolicy.DisabledCachingPolicy);
+            var result2 = await GetTestDataWithCachingAsync(key, LazyCachePolicy.DisabledCachingPolicy);
+            var result3 = await GetTestDataWithCachingAsync(key, LazyCachePolicy.DisabledCachingPolicy);
+            var result4 = await GetTestDataWithCachingAsync(key, LazyCachePolicy.DisabledCachingPolicy);
+
+            Assert.AreNotEqual(result1, result2);
+            Assert.AreNotSame(result1, result2);
+
+            Assert.AreNotEqual(result3, result4);
+            Assert.AreNotSame(result3, result4);
+
+            //Compare First and Last to ensure that ALL are the same!
+            Assert.AreNotEqual(result1, result4);
+            Assert.AreNotSame(result1, result4);
         }
 
         [TestMethod]
@@ -152,9 +175,9 @@ namespace LazyCacheHelpersTests
 
         protected static readonly int LongRunningTaskMillis = 1000;
 
-        public static async Task<string> GetTestDataWithCachingAsync(string key)
+        public static async Task<string> GetTestDataWithCachingAsync(string key, CacheItemPolicy overrideCacheItemPolicy = null)
         {
-            return await TestCacheFacade.GetCachedDataAsync(new TestCacheParams(key), async () =>
+            return await TestCacheFacade.GetCachedDataAsync(new TestCacheParams(key, overrideCacheItemPolicy), async () =>
             {
                 return await SomeLongRunningMethodAsync(DateTime.Now);
             });

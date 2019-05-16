@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Threading;
 using System.Runtime.Caching;
+using System.Threading;
 
 namespace LazyCacheHelpers
 {
@@ -14,6 +14,21 @@ namespace LazyCacheHelpers
     /// </summary>
     public class LazyCachePolicy
     {
+        /// <summary>
+        /// Static Reference to a CacheItemPolicy that represents a completely Disabled cache with an AbsoluteExpiration of DateTimeOffset.MinValue (e.g. beginning-of-time).
+        /// </summary>
+        public static CacheItemPolicy DisabledCachingPolicy => new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.MinValue };
+
+        /// <summary>
+        /// Helper method to abstract logic for determining if a CacheItemPolicy is disabled (e.g. AbsoluteExpiration of DateTimeOffset.MinValue).
+        /// </summary>
+        /// <param name="policy"></param>
+        /// <returns></returns>
+        public static bool IsPolicyEnabled(CacheItemPolicy policy)
+        {
+            return policy != null && policy.AbsoluteExpiration > DateTimeOffset.MinValue;
+        }
+
         /// <summary>
         /// Helper method to more easily create an Absolute Expiration CacheItemPolicy directly from a Configuration
         /// Parameter names that has the TTL Seconds; this will return the first identified valid configuration key.
