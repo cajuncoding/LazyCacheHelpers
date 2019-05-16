@@ -47,7 +47,7 @@ namespace LazyCacheHelpersTests
         public void TestCacheMisses()
         {
             int c = 0;
-            string key = "CachedDataWithDifferentKey";
+            string key = $"CachedDataWithDifferentKey[{nameof(TestCacheMisses)}]";
             var results = new List<string>()
             {
                 GetTestDataWithCaching($"{key}[{++c}]"),
@@ -101,6 +101,19 @@ namespace LazyCacheHelpersTests
 
             var ttlDisabledWithFallback = LazyCacheConfig.GetCacheTTLFromConfig(configKeys, LazyCacheConfig.NeverCacheTTL);
             Assert.AreEqual(ttlDisabledWithFallback, LazyCacheConfig.NeverCacheTTL);
+        }
+
+        [TestMethod]
+        public void TestCacheKeysWithDefaultMinimum()
+        {
+            var ttlExistingConfigValueIsLarger = LazyCacheConfig.GetCacheTTLFromConfig("CacheTTL.TestCacheParams", LazyCacheConfig.NeverCacheTTL);
+            Assert.IsTrue(ttlExistingConfigValueIsLarger > LazyCacheConfig.NeverCacheTTL);
+
+            var ttlConfigValueDoesNotExist = LazyCacheConfig.GetCacheTTLFromConfig($"CacheTTL.{Guid.NewGuid()}_NEVER_EXISTS", LazyCacheConfig.NeverCacheTTL);
+            Assert.AreEqual(ttlConfigValueDoesNotExist, LazyCacheConfig.NeverCacheTTL);
+
+            var ttlDefaultMinimumIsLarger = LazyCacheConfig.GetCacheTTLFromConfig("CacheTTL.TestCacheParams", LazyCacheConfig.ForeverCacheTTL);
+            Assert.AreEqual(ttlDefaultMinimumIsLarger, LazyCacheConfig.ForeverCacheTTL);
         }
 
         [TestMethod]

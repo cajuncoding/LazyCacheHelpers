@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Configuration;
+using System.Linq;
 
 namespace LazyCacheHelpers
 {
@@ -33,7 +34,8 @@ namespace LazyCacheHelpers
         /// Initialize the Cache TTL Seconds from Configuration in a fully ThreadSafe way by finding the configuration value
         /// of the first valid config key specified; searching in the order defined int the array.
         /// </summary>
-        /// <param name="configName"></param>
+        /// <param name="configKeysToSearch"></param>
+        /// <param name="defaultMinimumTTL"></param>
         /// <returns></returns>
         public static TimeSpan GetCacheTTLFromConfig(string[] configKeysToSearch, TimeSpan defaultMinimumTTL)
         {
@@ -58,36 +60,37 @@ namespace LazyCacheHelpers
         ///         for all subsequent readers of the value!
         /// </summary>
         /// <param name="configName"></param>
+        /// <param name="defaultMinimumTTL"></param>
         /// <returns></returns>
         public static TimeSpan GetCacheTTLFromConfig(string configName, TimeSpan defaultMinimumTTL)
         {
             //The ConcurrentDictionary and Lazy<> initializer provide complete Thread Safety and Guarantee that the code in
             //  our value factory lambda method ONLY EVER RUNS ONCE!
-            //NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> threadsafe
-            //        initializers to Guarantee that the initialization code is only every called once, while offerring great performance
+            //NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> thread-safe
+            //        initialization to Guarantee that the initialization code is only every called once, while offering great performance
             //        for all subsequent readers of the value!
             var cacheTTLLazyInitializer = _cacheTTLDictionary.GetOrAdd(configName, key =>
                 new Lazy<TimeSpan>(() =>
                 {
                     var configTTLSeconds = SafelyReadTTLConfigValue(configName);
 
-                    //Always enforce our own internal Default Minimum cache value, which the caller can specify
-                    //  to be anything they want for advanced use-case logic.
-                    var cacheTimeToLiveSeconds = configTTLSeconds > defaultMinimumTTL ? configTTLSeconds : defaultMinimumTTL;
-
                     //Return the final TimeSpan after computing the value from Configuration
-                    return cacheTimeToLiveSeconds;
+                    return configTTLSeconds;
                 })
             );
 
+            //Always enforce our own internal Default Minimum cache value, which the caller can specify
+            //  to be anything they want for advanced use-case logic.
+            var cacheTimeToLiveSeconds = cacheTTLLazyInitializer.Value;
+
             //Because we use a Thread safe Lazy Initializer we must call the Value property to get the value!
-            return cacheTTLLazyInitializer.Value;
+            return MaxTimeSpan(cacheTimeToLiveSeconds, defaultMinimumTTL);
         }
 
         #region Private Helpers
 
         /// <summary>
-        /// Private Helper method to read the value from configuraiton and parse it safely as an Int (TTL in Seconds).
+        /// Private Helper method to read the value from configuration and parse it safely as an Int (TTL in Seconds).
         /// </summary>
         /// <param name="configKeyName"></param>
         /// <returns></returns>
@@ -101,28 +104,35 @@ namespace LazyCacheHelpers
             {
                 return LazyCacheConfig.MissingCacheTTL;
             }
-            //If set to off or a negative value then return NeverCacheTTL
+            //If it exists but contains a keyword set to 'off' or a negative value then return NeverCacheTTL
             else if (configValue.Equals("off", StringComparison.OrdinalIgnoreCase))
             {
                 return LazyCacheConfig.NeverCacheTTL;
             }
-            //If it contains a Colon then parse the TimeSpan
+            //If it exists and contains a colon ':' then parse the TimeSpan
             else if (configValue.Contains(":"))
             {
                 var ttlTimeSpan = TimeSpan.Zero;
                 TimeSpan.TryParse(configValue, out ttlTimeSpan);
                 return ttlTimeSpan;
             }
-            //If it does not contain a Colon ':' then parse as Integer Seconds
+            //If it exists, is not a keyword, and does not contain a Colon ':' then parse as Integer Seconds
             else
             {
                 int ttlSeconds = 0;
                 Int32.TryParse(configValue, out ttlSeconds);
                 var parsedTimeSpan = TimeSpan.FromSeconds(ttlSeconds);
                 
-                //If the value is negative (e.g. less than 0) then return NeverCacheTTL
-                return parsedTimeSpan > LazyCacheConfig.NeverCacheTTL ? parsedTimeSpan : LazyCacheConfig.NeverCacheTTL;
+                //Return the Max value between the parsed value and NeverCacheTTL value...
+                //NOTE: If the parsed value is negative (e.g. less than 0) then we just return NeverCacheTTL.
+                return MaxTimeSpan(parsedTimeSpan, LazyCacheConfig.NeverCacheTTL);
             }
+        }
+
+        private static TimeSpan MaxTimeSpan(params TimeSpan[] timeSpanItems)
+        {
+            var maxTimeSpan = timeSpanItems.Max();
+            return maxTimeSpan;
         }
 
         #endregion

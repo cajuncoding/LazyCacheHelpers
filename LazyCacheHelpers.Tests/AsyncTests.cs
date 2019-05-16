@@ -48,7 +48,7 @@ namespace LazyCacheHelpersTests
         public async Task TestCacheMissesAsync()
         {
             int c = 0;
-            string key = "CachedDataWithDifferentKey";
+            string key = $"CachedDataWithDifferentKey[{nameof(TestCacheMissesAsync)}]";
             var results = new List<string>()
             {
                 await GetTestDataWithCachingAsync($"{key}[{++c}]"),

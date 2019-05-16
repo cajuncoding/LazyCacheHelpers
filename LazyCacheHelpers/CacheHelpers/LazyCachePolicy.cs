@@ -33,7 +33,7 @@ namespace LazyCacheHelpers
         /// Helper method to more easily create an Absolute Expiration CacheItemPolicy directly from a Configuration
         /// Parameter names that has the TTL Seconds; this will return the first identified valid configuration key.
         /// </summary>
-        /// <param name="cacheTimeSpanToLive"></param>
+        /// <param name="ttlConfigKeysToSearch"></param>
         /// <param name="callbackWhenCacheEntryRemoved"></param>
         /// <returns></returns>
         public static CacheItemPolicy NewAbsoluteExpirationPolicy(string[] ttlConfigKeysToSearch, Action<CacheEntryRemovedArguments> callbackWhenCacheEntryRemoved = null)
@@ -52,7 +52,7 @@ namespace LazyCacheHelpers
         /// Helper method to more easily create an Absolute Expiration CacheItemPolicy directly from a Configuration
         /// Parameter name that has the TTL Seconds; with Default fallback if it does not exist.
         /// </summary>
-        /// <param name="cacheTimeSpanToLive"></param>
+        /// <param name="ttlSecondsConfigKey"></param>
         /// <param name="callbackWhenCacheEntryRemoved"></param>
         /// <returns></returns>
         public static CacheItemPolicy NewAbsoluteExpirationPolicy(string ttlSecondsConfigKey, Action<CacheEntryRemovedArguments> callbackWhenCacheEntryRemoved = null)
