@@ -44,12 +44,6 @@ namespace LazyCacheHelpersTests
                 $"CacheTTL.Default"
             };
 
-            //Compute/Load the TTL from Configuration or from static class values, etc.
-            //NOTE: During high load the cache timings could be Distributed to prevent multiple misses at one time.
-            //var timeSpanTTL = TimeSpan.FromSeconds(300);
-            //var timeSpanTTL = LazyCachePolicy.RandomizeCacheTTLDistribution(TimeSpan.FromSeconds(secondsTTL), 60);
-            //var timeSpanTTL = LazyCacheConfig.GetCacheTTLFromConfig(configKey);
-
             if (_overrdieCacheItemPolicy != null)
             {
                 return _overrdieCacheItemPolicy;

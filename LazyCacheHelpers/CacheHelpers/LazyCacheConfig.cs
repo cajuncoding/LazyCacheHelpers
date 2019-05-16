@@ -16,6 +16,8 @@ namespace LazyCacheHelpers
         public static readonly TimeSpan DefaultMinimumCacheTTL = TimeSpan.FromSeconds(60);
         //Provide a reference to Never Cache TTL; to make code more readable.
         public static readonly TimeSpan NeverCacheTTL = TimeSpan.Zero;
+        //Provide a reference to Disabled Cache TTL; to make code more readable.
+        public static readonly TimeSpan MissingCacheTTL = TimeSpan.MinValue;
         //Provide a reference to the Maximum/Forever Cache TTL; to make code more readable.
         public static readonly TimeSpan ForeverCacheTTL = TimeSpan.MaxValue;
 
@@ -37,8 +39,8 @@ namespace LazyCacheHelpers
         {
             foreach (var configKey in configKeysToSearch)
             {
-                var timeSpanToLive = LazyCacheConfig.GetCacheTTLFromConfig(configKey, LazyCacheConfig.NeverCacheTTL);
-                if (timeSpanToLive.TotalMilliseconds > 0)
+                var timeSpanToLive = LazyCacheConfig.GetCacheTTLFromConfig(configKey, LazyCacheConfig.MissingCacheTTL);
+                if (timeSpanToLive == NeverCacheTTL || timeSpanToLive.TotalMilliseconds > 0)
                 {
                     return timeSpanToLive;
                 }
@@ -94,10 +96,15 @@ namespace LazyCacheHelpers
             var appSettings = ConfigurationManager.AppSettings;
             String configValue = appSettings[configKeyName];
 
-            //If not defined return Zero
-            if (string.IsNullOrWhiteSpace(configValue) || configValue.Equals("off", StringComparison.OrdinalIgnoreCase))
+            //If not defined return MissingCacheTTL
+            if (string.IsNullOrWhiteSpace(configValue))
             {
-                return NeverCacheTTL;
+                return LazyCacheConfig.MissingCacheTTL;
+            }
+            //If set to off or a negative value then return NeverCacheTTL
+            else if (configValue.Equals("off", StringComparison.OrdinalIgnoreCase))
+            {
+                return LazyCacheConfig.NeverCacheTTL;
             }
             //If it contains a Colon then parse the TimeSpan
             else if (configValue.Contains(":"))
@@ -111,7 +118,10 @@ namespace LazyCacheHelpers
             {
                 int ttlSeconds = 0;
                 Int32.TryParse(configValue, out ttlSeconds);
-                return TimeSpan.FromSeconds(ttlSeconds);
+                var parsedTimeSpan = TimeSpan.FromSeconds(ttlSeconds);
+                
+                //If the value is negative (e.g. less than 0) then return NeverCacheTTL
+                return parsedTimeSpan > LazyCacheConfig.NeverCacheTTL ? parsedTimeSpan : LazyCacheConfig.NeverCacheTTL;
             }
         }
 

@@ -89,7 +89,18 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual(ttlDisabledByOffValue, LazyCacheConfig.NeverCacheTTL);
 
             var ttlDisabledByNegativeValue = LazyCacheConfig.GetCacheTTLFromConfig("CacheTTL.Disabled.ByOffNegativeValue", LazyCacheConfig.NeverCacheTTL);
-            Assert.AreEqual(ttlDisabledByOffValue, LazyCacheConfig.NeverCacheTTL);
+            Assert.AreEqual(ttlDisabledByNegativeValue, LazyCacheConfig.NeverCacheTTL);
+
+            //Test that a disabled Cache Key doesn't actually result in using the Fallback
+            //  because it's actually overriding to Disable the Cache!
+            var configKeys = new string[] {
+                $"CacheTTL.{Guid.NewGuid()}.NEVER_FOUND",
+                $"CacheTTL.Disabled.ByOffValue",
+                $"CacheTTL.Default"
+            };
+
+            var ttlDisabledWithFallback = LazyCacheConfig.GetCacheTTLFromConfig(configKeys, LazyCacheConfig.NeverCacheTTL);
+            Assert.AreEqual(ttlDisabledWithFallback, LazyCacheConfig.NeverCacheTTL);
         }
 
         [TestMethod]
