@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/raerae1616/LazyCacheHelpers</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Initial nuget release.</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</tags>
+  </metadata>
+</package>
+
