@@ -19,7 +19,7 @@ function ComplexData GetComplexData(string variable)
 {
 	return DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
 		() => {
-			return BuildVeryComplexData();
+			return BuildVeryComplexData(variable);
 		},
 		LazyCachePolicy.NewAbsoluteExpirationPolicy(_cacheTTLConfigKey)
 	);
@@ -34,7 +34,7 @@ function async Task<ComplexData> GetComplexDataAsync(string variable)
 {
 	return await DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
 		async () => {
-			return await BuildVeryComplexDataAsync();
+			return await BuildVeryComplexDataAsync(variable);
 		},
 		LazyCachePolicy.NewAbsoluteExpirationPolicy(_cacheTTLConfigKey)
 	);
