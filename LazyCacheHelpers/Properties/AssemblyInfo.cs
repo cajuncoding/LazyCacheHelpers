@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("LazyCacheHelpers")]
 [assembly: AssemblyDescription("Library for leveraging the power of the Lazy class for high performance caching at all layers of an application with support for both Sync and Async Lazy operations to maximize server utilization and performance!")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Brandon Bernard")]
+[assembly: AssemblyCompany("BBernard / CajunCoding")]
 [assembly: AssemblyProduct("LazyCacheHelpers")]
-[assembly: AssemblyCopyright("MIT License - Copyright (c) 2018")]
+[assembly: AssemblyCopyright("MIT License - Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
