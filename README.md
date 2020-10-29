@@ -9,6 +9,10 @@ This class provides a completely ThreadSafe cache with Lazy loading/initializati
 
 NOTE: A default implementation using .Net MemoryCache is implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) to enable working with MemoryCache with greatly simplified support for self-populating (Lazy) initialization.
 
+## Nuget Package
+To use behaviors in your project, add the [LazyCacheHelpers NuGet package](https://www.nuget.org/packages/LazyCacheHelpers/) to your project.
+
+## Usage:
 It's as easy as . . .
 
 **Synchronous Caching:**
@@ -19,7 +23,7 @@ function ComplexData GetComplexData(string variable)
 {
 	return DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
 		() => {
-			return BuildVeryComplexData();
+			return BuildVeryComplexData(variable);
 		},
 		LazyCachePolicy.NewAbsoluteExpirationPolicy(_cacheTTLConfigKey)
 	);
@@ -34,7 +38,7 @@ function async Task<ComplexData> GetComplexDataAsync(string variable)
 {
 	return await DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
 		async () => {
-			return await BuildVeryComplexDataAsync();
+			return await BuildVeryComplexDataAsync(variable);
 		},
 		LazyCachePolicy.NewAbsoluteExpirationPolicy(_cacheTTLConfigKey)
 	);
