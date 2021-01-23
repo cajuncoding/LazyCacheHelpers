@@ -6,7 +6,7 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
     /// Public Interface for the Lazy Cache Handler which is the core class for processing Lazy loaded/initialized 
     /// cache values with a self-populating flow that ensures that only one thread ever performs the work needed to 

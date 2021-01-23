@@ -16,7 +16,7 @@ namespace LazyCacheHelpersTests
     {
         /// <summary>
         /// BBernard
-        /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+        /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
         /// 
         /// Synchronous Tests for LazyCacheHelpers
         /// 
@@ -31,7 +31,7 @@ namespace LazyCacheHelpersTests
             var result2 = GetTestDataWithCaching(key);
             var result3 = GetTestDataWithCaching(key);
             var result4 = GetTestDataWithCaching(key);
-
+            
             Assert.AreEqual(result1, result2);
             Assert.AreSame(result1, result2);
 
@@ -119,10 +119,10 @@ namespace LazyCacheHelpersTests
         [TestMethod]
         public void TestCachePoliciesFromDisabledValues()
         {
-            var policyDisabledByOffValue = LazyCachePolicy.NewAbsoluteExpirationPolicy("CacheTTL.Disabled.ByOffValue");
+            var policyDisabledByOffValue = LazyCachePolicyFromConfig.NewAbsoluteExpirationPolicy("CacheTTL.Disabled.ByOffValue");
             Assert.IsFalse(LazyCachePolicy.IsPolicyEnabled(policyDisabledByOffValue));
 
-            var policyDisabledByNegativeValue = LazyCachePolicy.NewAbsoluteExpirationPolicy("CacheTTL.Disabled.ByOffNegativeValue");
+            var policyDisabledByNegativeValue = LazyCachePolicyFromConfig.NewAbsoluteExpirationPolicy("CacheTTL.Disabled.ByOffNegativeValue");
             Assert.IsFalse(LazyCachePolicy.IsPolicyEnabled(policyDisabledByNegativeValue));
         }
 

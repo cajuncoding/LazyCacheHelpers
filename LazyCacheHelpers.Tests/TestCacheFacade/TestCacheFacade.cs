@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace LazyCacheHelpersTests
 {
     /// <summary>
-    /// BBernad
+    /// BBernard
     /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
     /// 
     /// Sample Facade class to illustrate how a real applicaion might utilize LazyCacheHelpers classes in

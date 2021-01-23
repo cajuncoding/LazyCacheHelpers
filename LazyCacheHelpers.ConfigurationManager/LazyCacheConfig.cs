@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Caching;
 
 namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
     /// Class to support reading cache configuration values from Configuration (e.g. TTL Seconds defined in Configuration).
     /// </summary>
@@ -28,7 +30,7 @@ namespace LazyCacheHelpers
         //NOTE: The number and size of these values are are finite and/or known therefore this is the most efficient way to 
         //      manage them for Performance and Thread Safety; this does NOT support Garbage Collection or Resource Reclaiming 
         //      as the .Net MemoryCache would.
-        private static ConcurrentDictionary<string, Lazy<TimeSpan>> _cacheTTLDictionary = new ConcurrentDictionary<string, Lazy<TimeSpan>>();
+        private static readonly ConcurrentDictionary<string, Lazy<TimeSpan>> _cacheTTLDictionary = new ConcurrentDictionary<string, Lazy<TimeSpan>>();
 
         /// <summary>
         /// Initialize the Cache TTL Seconds from Configuration in a fully ThreadSafe way by finding the configuration value
@@ -55,8 +57,8 @@ namespace LazyCacheHelpers
         /// Initialize the internal Cache of TTL Seconds from Configuration in a fully ThreadSafe way, with fallback logic for when the 
         ///     value does not exist or is less than the Default Minimum Value specified.
         /// NOTE: We do this so that we don't have to read the Configuration every time we retrieve the TTL Settings.
-        /// NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> threadsafe
-        ///         initializers to Guarantee that the initialization code is only every called once, while offerring great performance
+        /// NOTE: We don't have to worry about Manual locking because we use the ConcurrentDictionary in combination with Lazy<> thread-safe
+        ///         initialization to Guarantee that the initialization code is only every called once, while offering great performance
         ///         for all subsequent readers of the value!
         /// </summary>
         /// <param name="configName"></param>
@@ -96,6 +98,10 @@ namespace LazyCacheHelpers
         /// <returns></returns>
         private static TimeSpan SafelyReadTTLConfigValue(String configKeyName)
         {
+#if DEBUG
+            var configFilePath = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).FilePath;
+            Debug.WriteLine($"Looking for Configuration File: [{configFilePath}]");
+#endif
             var appSettings = ConfigurationManager.AppSettings;
             String configValue = appSettings[configKeyName];
 
@@ -112,15 +118,13 @@ namespace LazyCacheHelpers
             //If it exists and contains a colon ':' then parse the TimeSpan
             else if (configValue.Contains(":"))
             {
-                var ttlTimeSpan = TimeSpan.Zero;
-                TimeSpan.TryParse(configValue, out ttlTimeSpan);
+                TimeSpan.TryParse(configValue, out TimeSpan ttlTimeSpan);
                 return ttlTimeSpan;
             }
             //If it exists, is not a keyword, and does not contain a Colon ':' then parse as Integer Seconds
             else
             {
-                int ttlSeconds = 0;
-                Int32.TryParse(configValue, out ttlSeconds);
+                int.TryParse(configValue, out int ttlSeconds);
                 var parsedTimeSpan = TimeSpan.FromSeconds(ttlSeconds);
                 
                 //Return the Max value between the parsed value and NeverCacheTTL value...

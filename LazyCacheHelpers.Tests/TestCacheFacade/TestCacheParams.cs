@@ -6,18 +6,19 @@ namespace LazyCacheHelpersTests
 {
     public class TestCacheParams : ILazyCacheParams
     {
-        private string _variableName = String.Empty;
-        private TimeSpan _ttlOverrideTimeSpan = TimeSpan.Zero;
-        private CacheItemPolicy _overrdieCacheItemPolicy = null;
+        private readonly string _variableName;
+        private readonly TimeSpan _ttlOverrideTimeSpan;
+        private readonly CacheItemPolicy _overrideCacheItemPolicy;
 
         /// <summary>
         /// Create Cache Params with default TTL dynamically loaded from App Config.
         /// </summary>
         /// <param name="keyNameVariable"></param>
-        public TestCacheParams(String keyNameVariable, CacheItemPolicy overrideCachePolicy = null)
+        /// <param name="overrideCachePolicy"></param>
+        public TestCacheParams(string keyNameVariable, CacheItemPolicy overrideCachePolicy = null)
         {
-            _variableName = keyNameVariable;
-            _overrdieCacheItemPolicy = overrideCachePolicy;
+            _variableName = keyNameVariable ?? string.Empty;
+            _overrideCacheItemPolicy = overrideCachePolicy;
         }
 
         /// <summary>
@@ -25,9 +26,9 @@ namespace LazyCacheHelpersTests
         /// </summary>
         /// <param name="keyNameVariable"></param>
         /// <param name="secondsTTL"></param>
-        public TestCacheParams(String keyNameVariable, int secondsTTL)
+        public TestCacheParams(string keyNameVariable, int secondsTTL)
         {
-            _variableName = keyNameVariable;
+            _variableName = keyNameVariable ?? string.Empty;
             _ttlOverrideTimeSpan = TimeSpan.FromSeconds(secondsTTL);
         }
 
@@ -44,13 +45,13 @@ namespace LazyCacheHelpersTests
                 $"CacheTTL.Default"
             };
 
-            if (_overrdieCacheItemPolicy != null)
+            if (_overrideCacheItemPolicy != null)
             {
-                return _overrdieCacheItemPolicy;
+                return _overrideCacheItemPolicy;
             }
             else if (_ttlOverrideTimeSpan == TimeSpan.Zero)
             {
-                return LazyCachePolicy.NewAbsoluteExpirationPolicy(configKeys);
+                return LazyCachePolicyFromConfig.NewAbsoluteExpirationPolicy(configKeys);
             }
             else
             {

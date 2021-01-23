@@ -9,9 +9,9 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
-    /// Facade implementaiton for the default .Net MemoryCache implementation for the LazyCacheHandler.
+    /// Facade implementation for the default .Net MemoryCache implementation for the LazyCacheHandler.
     /// This allows lazy initialization and self-populating flow to be implemented on top of the out-of-the-box
     /// .Net Memory Cache.
     /// 

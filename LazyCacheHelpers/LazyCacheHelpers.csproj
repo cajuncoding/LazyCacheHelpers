@@ -1,65 +1,30 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0CCE1968-C293-4E93-BEFD-DF381748CF8C}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LazyCacheHelpers</RootNamespace>
-    <AssemblyName>LazyCacheHelpers</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Library for leveraging the power of the Lazy class to enable high performance caching at all layers of an application. It provides support for both Sync and Async Lazy caching operations in an extremely lightweight and simple footprint -- with passive cache coding style using Lambdas to maximize server utilization and performance with a blocking, or self-populating, cache implementation!</Description>
+    <Copyright>Copyright (c) 2018</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>BBernard / CajunCoding</Authors>
+    <Company>CajunCoding</Company>
+    <PackageProjectUrl>https://github.com/cajuncoding/LazyCacheHelpers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/cajuncoding/LazyCacheHelpers</RepositoryUrl>
+    <PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
+    <PackageReleaseNotes>- Refactored as .Net Standard v2.0 compatible Library for greater compatibility
+- Removed dependency on System.ConfigurationManagement; breaking change if a couple helper overloads were used. The helpers can be restored by adding LazyCacheHelpers.ConfigurationManagement extension package and renaming all calls to LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
+- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
+
+Prior Release Notes:
+Initial nuget release for .Net Framework.</PackageReleaseNotes>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <Version>1.0.2</Version>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <None Include="..\README.md" Link="README.md" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="CacheHelpers\LazyCacheConfig.cs" />
-    <Compile Include="CacheHelpers\LazyCachePolicy.cs" />
-    <Compile Include="CacheInterfaces\ILazyCacheHandler.cs" />
-    <Compile Include="CacheInterfaces\ILazyCacheParams.cs" />
-    <Compile Include="CacheInterfaces\ILazyCachePolicy.cs" />
-    <Compile Include="CacheInterfaces\ILazyCacheKey.cs" />
-    <Compile Include="CacheInterfaces\ILazyCacheRepository.cs" />
-    <Compile Include="CacheRepositories\LazyDictionaryCacheRepository.cs" />
-    <Compile Include="CacheRepositories\LazyDotNetMemoryCacheRepository.cs" />
-    <Compile Include="DefaultLazyCache.cs" />
-    <Compile Include="LazyCacheHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\README.md">
-      <Link>README.md</Link>
-    </None>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -6,20 +6,20 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
-    /// Facade implementaiton for Local in-memory Dictionary based static cache for the LazyCacheHandler.
+    /// Facade implementation for Local in-memory Dictionary based static cache for the LazyCacheHandler.
     /// This allows lazy initialization and self-populating flow to be implemented on top of a very lightweight
     /// simplified dictionary based cache storage mechanism.
     /// 
     /// NOTE: This cache mechanism has limited support for cache policies and has
     ///         no support for Garbage Collection or memory pressure re-claiming of resources.
-    /// NOTE: This currenly supports ONLY AbsoluteExpiration based cache item policy.
+    /// NOTE: This currently supports ONLY AbsoluteExpiration based cache item policy.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class LazyDictionaryCacheRepository : ILazyCacheRepository
     {
-        ConcurrentDictionary<string, DictionaryCacheEntry> _cacheDictionary = new ConcurrentDictionary<String, DictionaryCacheEntry>();
+        readonly ConcurrentDictionary<string, DictionaryCacheEntry> _cacheDictionary = new ConcurrentDictionary<String, DictionaryCacheEntry>();
 
         public object AddOrGetExisting(string key, object value, CacheItemPolicy cacheItemPolicy)
         {
@@ -38,8 +38,7 @@ namespace LazyCacheHelpers
 
         public void Remove(string key)
         {
-            DictionaryCacheEntry removedEntry = null;
-            _cacheDictionary.TryRemove(key, out removedEntry);
+            _cacheDictionary.TryRemove(key, out _);
         }
 
         private class DictionaryCacheEntry
@@ -51,9 +50,9 @@ namespace LazyCacheHelpers
                 this.CachePolicy = cacheItemPolicy;
             }
 
-            public string CacheKey { get; private set; }
-            public object Value { get; private set; }
-            public CacheItemPolicy CachePolicy { get; private set; }
+            public string CacheKey { get; }
+            public object Value { get; }
+            public CacheItemPolicy CachePolicy { get; }
         }
 
     }

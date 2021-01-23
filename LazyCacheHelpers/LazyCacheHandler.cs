@@ -6,7 +6,7 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
     /// LazyCache Handler for easy cache implementations at all layers of an application with support for both Sync & Async
     /// Lazy operations to maximize server utilization and performance!
@@ -66,8 +66,8 @@ namespace LazyCacheHelpers
         /// <returns></returns>
         public virtual TValue GetOrAddFromCache<TKey>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy)
         {
-            //We support eitehr ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
-            //  impelmentation creates a valid unique Key for us, so here we initialize the Cache Key to use.
+            //We support either ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
+            //  implementation creates a valid unique Key for us, so here we initialize the Cache Key to use.
             string cacheKey = GenerateCacheKeyHelper(key);
 
             //We support a lambda initializer function to initialize the Cached Item value if it does not already exist, but we
@@ -76,8 +76,8 @@ namespace LazyCacheHelpers
             var newValueLazyInitializer = new Lazy<TValue>(fnValueFactory);
 
             //Using .Net Memory Cache (which supports garbage collection and resource re-claim as needed) we use the Thread safe
-            //AddOrGetExisting() meethod to efficiently initialize and/or retrieve our item from Cache.
-            //NOTE: Because Unknown code may run during the Initializaiton and execution of the Lambda function, we must
+            //AddOrGetExisting() method to efficiently initialize and/or retrieve our item from Cache.
+            //NOTE: Because Unknown code may run during the Initialization and execution of the Lambda function, we must
             //      provide Error Trapping Here to minimize impact to Cache and propagate the error up to calling code!
             var existingCachedLazyInitializer = _cacheRepository.AddOrGetExisting(cacheKey, newValueLazyInitializer, cacheItemPolicy) as Lazy<TValue>;
 
@@ -102,7 +102,7 @@ namespace LazyCacheHelpers
         /// BBernard
         /// 
         /// An Async wrapper implementation for using ICacheRepository to make working with Thread Safety for 
-        /// Asynchronos processes significantly easier. This provides completely ThreadSafe Async cache with Lazy Loading capabilities 
+        /// Asynchronous processes significantly easier. This provides completely ThreadSafe Async cache with Lazy Loading capabilities 
         /// in an easy to use function; Lazy<typeparamref name="TValue"/> loading facilitates self-populating cache so that the long running processes are never 
         /// executed more than once, even if they are triggered at approx. the same time.
         /// 
@@ -131,7 +131,7 @@ namespace LazyCacheHelpers
         public virtual async Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<TValue>> fnAsyncValueFactory, CacheItemPolicy cacheItemPolicy)
         {
             //We support eitehr ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
-            //  impelmentation creates a valid unique Key for us, so here we initialize the Cache Key to use.
+            //  implementation creates a valid unique Key for us, so here we initialize the Cache Key to use.
             string cacheKey = GenerateCacheKeyHelper(key);
 
             //BBernard - 03/06/2018
@@ -142,15 +142,15 @@ namespace LazyCacheHelpers
 
             //BBernard - 03/06/2018
             //Using .Net Memory Cache (which supports garbage collection and resource re-claim as needed) we use the Thread safe
-            //AddOrGetExisting() meethod to efficiently initialize and/or retrieve our item from Cache.
-            //NOTE: Because Unknown code may run during the Initializaiton and execution of the Lambda function, we must
+            //AddOrGetExisting() method to efficiently initialize and/or retrieve our item from Cache.
+            //NOTE: Because Unknown code may run during the Initialization and execution of the Lambda function, we must
             //      provide Error Trapping Here to minimize impact to Cache and propagate the error up to calling code!
             var existingCachedAsyncLazyInitializer = _cacheRepository.AddOrGetExisting(cacheKey, newValueAsyncLazyInitializer, cacheItemPolicy) as Lazy<Task<TValue>>;
             try
             {
                 //BBernard - 03/06/2018
                 //NOTE: We use the cached existing initializer if it is not null, but fall back to the new one.  
-                //      This is very important because it is the existing Cached intializer that will have already executed
+                //      This is very important because it is the existing Cached initializer that will have already executed
                 //      the value factory lambda/code and therefore guarantees that our initialization code only runs once.
                 //      Only if null do we use the new Lazy<> created that was also just added to the Cache, executing it's 
                 //      lambda code for the first and only time!
@@ -188,11 +188,11 @@ namespace LazyCacheHelpers
         /// <param name="key"></param>
         public virtual void RemoveFromCache<TKey>(TKey key)
         {
-            //We support eitehr ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
-            //  impelmentation creates a valid unique Key for us, so here we initialize the Cache Key to use.
+            //We support either ILazyCacheKey interface or any object for the Cache Key as long as it's ToString() 
+            //  implementation creates a valid unique Key for us, so here we initialize the Cache Key to use.
             var cacheKey = GenerateCacheKeyHelper(key);
 
-            //Remvoe the Item from the underlying Cache Repository
+            //Remove the Item from the underlying Cache Repository
             _cacheRepository.Remove(cacheKey);
         }
 
