@@ -172,7 +172,7 @@ namespace LazyCacheHelpersTests
             C3PO
         }
 
-        public static ILookup<Enum, string> GetEnumDescriptionsLookup<TEnum>() where TEnum: Enum
+        private static ILookup<Enum, string> GetEnumDescriptionsLookup<TEnum>() where TEnum: Enum
         {
             var enumDescriptionLookup = ((TEnum[])Enum.GetValues(typeof(TEnum))).ToLookup(
                 ev => (Enum)ev,
@@ -182,7 +182,7 @@ namespace LazyCacheHelpersTests
             return enumDescriptionLookup;
         }
 
-        public static string GetDescriptionForEnum(Enum value)
+        private static string GetDescriptionForEnum(Enum value)
         {
             FieldInfo fieldInfo = value.GetType().GetField(value.ToString());
             if (fieldInfo == null)
