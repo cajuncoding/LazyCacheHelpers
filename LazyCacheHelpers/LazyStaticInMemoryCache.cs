@@ -70,7 +70,6 @@ namespace LazyCacheHelpers
                 //BBernard - Always remove from the cache if it exists and any exception occurs so that we do NOT allow negative caching (e.g. caching of failed results)
                 //NOTE: We do a check to prevent redundant/duplicated calls to TryRemove...
                 _lazyAsyncCache.TryRemove(localKeyRef, out _);
-
                 throw;
             }
         }
