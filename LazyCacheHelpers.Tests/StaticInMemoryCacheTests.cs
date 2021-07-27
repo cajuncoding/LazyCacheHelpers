@@ -174,7 +174,7 @@ namespace LazyCacheHelpersTests
 
         private static ILookup<Enum, string> GetEnumDescriptionsLookup<TEnum>() where TEnum: Enum
         {
-            var enumDescriptionLookup = ((TEnum[])Enum.GetValues(typeof(TEnum))).ToLookup(
+            var enumDescriptionLookup = Enum.GetValues(typeof(TEnum)).Cast<TEnum>().ToLookup(
                 ev => (Enum)ev,
                 ev => GetDescriptionForEnum(ev)
             );
