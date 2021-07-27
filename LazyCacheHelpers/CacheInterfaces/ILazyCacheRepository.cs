@@ -9,7 +9,7 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
     /// Interface facade for the underlying Cache repository to be utilized.  This de-couples the LazyCacheHandler
     /// class from specific caching implementations and allows new LazyCacheHandlers to be created supporting

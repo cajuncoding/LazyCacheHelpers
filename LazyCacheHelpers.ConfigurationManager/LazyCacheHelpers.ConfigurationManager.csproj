@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Extension package for the LazyCacheHelpers Library to provide easy to use helpers to read cache configuration values from App.Config or Web.config files using System.Configuration; making things like enabling/disabling and dynamic fallback from specialized to generalized config values much easier to implement.</Description>
+    <Copyright>Copyright (c) 2018</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>BBernard / CajunCoding</Authors>
+    <Company>CajunCoding</Company>
+    <PackageProjectUrl>https://github.com/cajuncoding/LazyCacheHelpers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/cajuncoding/LazyCacheHelpers</RepositoryUrl>
+    <PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
+    <PackageReleaseNotes>
+      - Refactored as .Net Standard v2.0 compatible Library for greater compatibility
+      - Now uses System.ConfigurationManagement package.
+      - Breaking change if these helpers were used from prior version v1.0.1 of LazyCacheHelpers; the helpers now require renaming all calls from LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
+
+      Prior Release Notes:
+      Initial nuget release for .Net Framework.
+    </PackageReleaseNotes>
+    <Version>1.0.2</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LazyCacheHelpers\LazyCacheHelpers.csproj" />
+  </ItemGroup>
+
+</Project>

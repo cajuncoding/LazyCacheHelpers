@@ -6,7 +6,7 @@ namespace LazyCacheHelpers
 {
     /// <summary>
     /// BBernard
-    /// Original Source (MIT License): https://github.com/raerae1616/LazyCacheHelpers
+    /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
     /// This class provides simple way to get started with teh LazyCacheHandler by implementing an easy to use 
     /// Default instance of LazyCacheHandler that supports generic caching of any data with any CacheKey.
