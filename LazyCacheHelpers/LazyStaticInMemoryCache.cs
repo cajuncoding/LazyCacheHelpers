@@ -8,18 +8,21 @@ namespace LazyCacheHelpers
     /// BBernard
     /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
-    /// This class provides a simple wrapper facade to much more easily manage in-memory data cache for storing and caching Lazy<T> loaded results that never change.
-    /// This facade eliminates the redundancy of managing the ConcurrentDictionary and Lazy wrappers and uses generics to provide a simple GetOrAdd() method
+    /// This class provides a simple wrapper facade to much more easily manage in-memory data cache for storing and caching Lazy<T> loaded results that rarely ever change.
+    /// It provides support for both Synchronous and Async processes that are defined as value factory delegates (very easy with Lambda expressions).
+    /// This facade eliminates the redundancy of managing the ConcurrentDictionary and Lazy wrappers and uses generics to provide a simple GetOrAdd() and TryRemove() method
     /// that takes in  Key and returns teh cached result from in-memory or generated from teh value factory via very efficient blocking-cache pattern!
-    ///
-    /// This supports both Sync and Async processing, using the same backing cache concurrent dictionary!
     /// </summary>
-    public class LazyStaticInMemoryCache<TKey, TCacheItem>
+    public class LazyStaticInMemoryCache<TKey, TValue>
     {
-        private readonly ConcurrentDictionary<TKey, Lazy<TCacheItem>> _lazySyncCache = new ConcurrentDictionary<TKey, Lazy<TCacheItem>>();
-        private readonly ConcurrentDictionary<TKey, Lazy<Task<TCacheItem>>> _lazyAsyncCache = new ConcurrentDictionary<TKey, Lazy<Task<TCacheItem>>>();
+        protected readonly ConcurrentDictionary<TKey, Lazy<TValue>> _lazySyncCache = new ConcurrentDictionary<TKey, Lazy<TValue>>();
+        protected readonly ConcurrentDictionary<TKey, Lazy<Task<TValue>>> _lazyAsyncCache = new ConcurrentDictionary<TKey, Lazy<Task<TValue>>>();
 
-        public TCacheItem GetOrAdd(TKey key, Func<TKey, TCacheItem> cacheValueFactory)
+        /// Initialize a new Synchronous value factory for lazy loading a value from an expensive Async process, and execute the value factory at most one time (ever, across any/all threads).
+        /// This provides a robust blocking cache mechanism backed by the Lazy<> class for high performance lazy loading of data that rarely ever changes.
+        /// The resulting value will be immediately returned as fast as possible, and if another thread already initialized it and is working on it then you will benefit from the work
+        /// already completed.
+        public virtual TValue GetOrAdd(TKey key, Func<TKey, TValue> cacheValueFactory)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (cacheValueFactory == null) throw new ArgumentNullException(nameof(cacheValueFactory));
@@ -28,7 +31,7 @@ namespace LazyCacheHelpers
             try
             {
                 var cachedLazy = _lazySyncCache.GetOrAdd(localKeyRef,
-                    new Lazy<TCacheItem>(() =>
+                    new Lazy<TValue>(() =>
                     {
                         var result = cacheValueFactory.Invoke(localKeyRef);
                         return result;
@@ -46,7 +49,29 @@ namespace LazyCacheHelpers
             }
         }
 
-        public async Task<TCacheItem> GetOrAddAsync(TKey key, Func<TKey, Task<TCacheItem>> cacheValueFactoryAsync)
+        /// <summary>
+        /// Attempt to remove the synchronous value factory, for the specified Key, with minimal runtime impact.
+        /// The value factory will be immediately discarded and will not execute even if it has
+        ///     never been initialized/executed before.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public virtual bool TryRemove(TKey key)
+        {
+            var localKeyRef = key;
+            return _lazySyncCache.TryRemove(localKeyRef, out _);
+        }
+
+        /// <summary>
+        /// Initialize a new Async value factory for lazy loading a value from an expensive Async process, and execute the value factory at most one time (ever, across any/all threads).
+        /// This provides a robust blocking cache mechanism backed by the Lazy<> class for high performance lazy loading of data that rarely ever changes.
+        /// The resulting value will be immediately returned as fast as possible, and if another thread already initialized it and is working on it then you will benefit from the work
+        /// already completed.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cacheValueFactoryAsync"></param>
+        /// <returns></returns>
+        public virtual async Task<TValue> GetOrAddAsync(TKey key, Func<TKey, Task<TValue>> cacheValueFactoryAsync)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (cacheValueFactoryAsync == null) throw new ArgumentNullException(nameof(cacheValueFactoryAsync));
@@ -55,7 +80,7 @@ namespace LazyCacheHelpers
             try
             {
                 var cachedAsyncLazy = _lazyAsyncCache.GetOrAdd(localKeyRef,
-                    new Lazy<Task<TCacheItem>>(async () =>
+                    new Lazy<Task<TValue>>(async () =>
                     {
                         var result = await cacheValueFactoryAsync.Invoke(localKeyRef);
                         return result;
@@ -73,5 +98,19 @@ namespace LazyCacheHelpers
                 throw;
             }
         }
+
+        /// <summary>
+        /// Attempt to remove the Async value factory, for the specified Key, with minimal runtime impact.
+        /// The value factory will be immediately discarded and will not execute even if it has
+        ///     never been initialized/executed before.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public virtual bool TryRemoveAsyncValue(TKey key)
+        {
+            var localKeyRef = key;
+            return _lazyAsyncCache.TryRemove(key, out _);
+        }
+
     }
 }
