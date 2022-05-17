@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Caching;
+using System.Runtime.CompilerServices;
 
 namespace LazyCacheHelpers
 {
@@ -15,6 +16,13 @@ namespace LazyCacheHelpers
     /// </summary>
     public class LazyCacheConfig
     {
+        private static Func<string, string> _readConfigValueDelegateFunc = null;
+
+        public static void BootstrapConfigValueReader(Func<string, string> configValueReaderFunc)
+        {
+            _readConfigValueDelegateFunc = configValueReaderFunc ?? throw new ArgumentNullException(nameof(configValueReaderFunc));
+        }
+
         //Provide a reference to the Default Minimum Cache TTL we enforce; to make code more readable.
         public static readonly TimeSpan DefaultMinimumCacheTTL = TimeSpan.FromSeconds(60);
         //Provide a reference to Never Cache TTL; to make code more readable.
@@ -98,12 +106,7 @@ namespace LazyCacheHelpers
         /// <returns></returns>
         private static TimeSpan SafelyReadTTLConfigValue(String configKeyName)
         {
-#if DEBUG
-            var configFilePath = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).FilePath;
-            Debug.WriteLine($"Looking for Configuration File: [{configFilePath}]");
-#endif
-            var appSettings = ConfigurationManager.AppSettings;
-            String configValue = appSettings[configKeyName];
+            var configValue = _readConfigValueDelegateFunc?.Invoke(configKeyName) ?? null;
 
             //If not defined return MissingCacheTTL
             if (string.IsNullOrWhiteSpace(configValue))
@@ -126,7 +129,7 @@ namespace LazyCacheHelpers
             {
                 int.TryParse(configValue, out int ttlSeconds);
                 var parsedTimeSpan = TimeSpan.FromSeconds(ttlSeconds);
-                
+
                 //Return the Max value between the parsed value and NeverCacheTTL value...
                 //NOTE: If the parsed value is negative (e.g. less than 0) then we just return NeverCacheTTL.
                 return MaxTimeSpan(parsedTimeSpan, LazyCacheConfig.NeverCacheTTL);
