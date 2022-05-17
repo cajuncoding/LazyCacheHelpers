@@ -11,7 +11,8 @@
     <RepositoryUrl>https://github.com/cajuncoding/LazyCacheHelpers</RepositoryUrl>
     <PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
     <PackageReleaseNotes>
-		- Restored LazyCacheConfig to the original library with support reading values dynamically from Configuration; no longer in this library.
+		- Synced the version with the main package for easier management and to correctly sync with GitHub tags.
+	    - Restored LazyCacheConfig to the original library with support reading values dynamically from Configuration; no longer in this library.
 		- Added support for Bootstrapping the new dynamic Configuration Reader Func (Delegate) with a default implementation that reads from ConfigurationManager.AppSettings.
 
 		Prior Release Notes:
@@ -20,7 +21,7 @@
 		- Breaking change if these helpers were used from prior version v1.0.1 of LazyCacheHelpers; the helpers now require renaming all calls from LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
 		- Initial nuget release for .Net Framework.
 	</PackageReleaseNotes>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
