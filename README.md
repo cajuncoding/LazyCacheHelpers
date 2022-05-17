@@ -25,22 +25,42 @@ that can take exhorbitant amounts of time (10 seconds, 30 seconds, etc.)!
 This library provides a completely ThreadSafe cache with Lazy loading/initialization capability in an easy to use
  implementation that can work at all levels of an application (classes, controllers, etc.).
 
+#### LazyCacheConfig Static Class
+A set of static helpers that enable working with configuration in various helpful scenarios much easier. 
+It provides mechanism to read Cache TTL values from configuration safely and easily. It helps when you want
+to implement cache configurations that might fallback to general cache settings if very specific ones aren't defined, etc.
+
+The key to using these is that you define (one time at app startup) the static configuration reader delegate function
+that when given a cache key `string` it returns the a given cache TTL seconds (`string`; will be converted to `int` automatically).
+This allows you to control where config values are read from but don't have to implement all of hte other helpful
+looping for fallback values, etc. manually.
+
 #### LazyCacheHelpers.ConfigurationManagement
-This is an extension package for the LazyCacheHelpers Library to provide easy to use helpers to read cache configuration
-values from App.Config or Web.config (e.g. AppSettings) files using System.Configuration package.  These helpers
-make working with configuration and many helpful scenarios much easier. It has built in support for enabling/disabling
-configuration values (without deleting them) which also works in tandem with dynamic fallback from highly 
-specific/specialized configuration values (e.g. method level) to generalized config values (e.g. class, or 
-controller, or global) much easier to implement.
+This is an extension package for the LazyCacheHelpers Library to provide easy to use bootstrap method that will initialize
+the LazyCacheConfig class to read cache configuration using ConfigurationManagement.AppSettings.
 
-##### Breaking Change:
-To improve compatibility the built in helpers for processing AppSettings configuration values for cache policy time-to-live values
-has now been broken out into a separate package. This is a breaking change from v1.0.0.1; but can be easily fixed by renaming
-prior references to `LazyCachePolicy` static helper to now use `LazyCachePolicyFromConfig` static helper. Otherwise the signatures
-are identical.
+To use the ConfigurationManager you just have to run this, in you application startup, to initialize the config reader func/delegate:
+`LazyCacheConfigurationManager.BootstrapConfigurationManager();`
 
+#### Breaking Change for Reading Config values:
+To improve compatibility the built in helpers for processing AppSettings configuration values and the LazyCacheConfig
+ned to be initialized in your application startup process by defining the config reader func:
+```csharp
+LazyCacheConfig.BootstrapConfigValueReader(configKeyName => {
+	
+	... read your config value and return it as a string, or null if not found/undefined ...
+
+});
+```
+
+OR use the ConfigurationManager Bootstrap helper above if you use AppSettings; it'll wire up a default reader for you (see below)!
 
 ## Release Notes:
+### v1.0.4
+- Restored LazyCacheConfig class capabilities for reading values dynamically from Configuration.
+- Added support for Bootstrapping a Configuration Reader Func (Delegate) so that all reading of config values from the keys is completely dynamic now.
+- Updated LazyCacheHelpers.ConfigurationManager library to now provide the Bootstrap method to initialize reading from AppSettings.
+
 ### v1.0.3
 - Added new `LazyStaticInMemoryCache<>` class to make dyanimically caching data, that rarely or never changes, in memory 
 in a high performance blocking (self-populating) cache using Lazy<> as the backing mechanism. This now works similar to
