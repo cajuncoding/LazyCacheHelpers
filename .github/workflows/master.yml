@@ -23,6 +23,13 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      #Setup .Net to support .Net versions (.Net Core 3.1, .Net 6.0, etc.)
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: | 
+            6.0.x
+            
       # Runs a single command using the runners shell
       - name: Run a one-line script
         run: echo Executing Main Branch commit Workflow!
@@ -33,13 +40,23 @@ jobs:
       #    echo Add other actions to build,
       #    echo test, and deploy your project.
       - name: "Publish NuGet: LazyCacheHelpers"
-        uses: brandedoutcast/publish-nuget@v2.5.5
+        #BBernard - 05/17/2022
+        #Per the Thread here, I kept getting "error: File does not exist (1)." but this other Fork resolves it
+        #   as noted by the 11 Stars on it (vs many other random forks).
+        #   https://github.com/brandedoutcast/publish-nuget/issues/76#issuecomment-1118344860
+        #uses: brandedoutcast/publish-nuget@v2.5.5
+        uses: alirezanet/publish-nuget@v3.0.4
         with:
           # Filepath of the project to be packaged, relative to root of repository
           PROJECT_FILE_PATH: LazyCacheHelpers/LazyCacheHelpers.csproj
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
       - name: "Publish NuGet: LazyCacheHelpers.ConfigurationManager"
-        uses: brandedoutcast/publish-nuget@v2.5.5
+        #BBernard - 05/17/2022
+        #Per the Thread here, I kept getting "error: File does not exist (1)." but this other Fork resolves it
+        #   as noted by the 11 Stars on it (vs many other random forks).
+        #   https://github.com/brandedoutcast/publish-nuget/issues/76#issuecomment-1118344860
+        #uses: brandedoutcast/publish-nuget@v2.5.5
+        uses: alirezanet/publish-nuget@v3.0.4
         with:
           # Filepath of the project to be packaged, relative to root of repository
           PROJECT_FILE_PATH: LazyCacheHelpers.ConfigurationManager/LazyCacheHelpers.ConfigurationManager.csproj
