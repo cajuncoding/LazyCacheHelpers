@@ -10,15 +10,18 @@
     <PackageProjectUrl>https://github.com/cajuncoding/LazyCacheHelpers</PackageProjectUrl>
     <RepositoryUrl>https://github.com/cajuncoding/LazyCacheHelpers</RepositoryUrl>
     <PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
-    <PackageReleaseNotes>- Added new LazyStaticInMemoryCache&lt;&gt; class to make it significantly easier to implement in-memory caching of data that rarely or never changes with the lazy loading, blocking cache, pattern; great for minimizing the runtime impact of expensive Reflection or I/O Async logic for data that rarely or never changes.
-- Refactored as .Net Standard v2.0 compatible Library for greater compatibility
-- Removed dependency on System.ConfigurationManagement; breaking change if a couple helper overloads were used. The helpers can be restored by adding LazyCacheHelpers.ConfigurationManagement extension package and renaming all calls to LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
-- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
+    <PackageReleaseNotes>
+		- Restored LazyCacheConfig class capabilities for reading values dynamically from Configuration.
+		- Added support for Bootstrapping a Configuration Reader Func (Delegate) so that all reading of config values from the keys is completely dynamic now.
 
-Prior Release Notes:
-Initial nuget release for .Net Framework.</PackageReleaseNotes>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <Version>1.0.3</Version>
+		Prior Release Notes:
+		- Added new LazyStaticInMemoryCache&lt;&gt; class to make it significantly easier to implement in-memory caching of data that rarely or never changes with the lazy loading, blocking cache, pattern; great for minimizing the runtime impact of expensive Reflection or I/O Async logic for data that rarely or never changes.
+		- Refactored as .Net Standard v2.0 compatible Library for greater compatibility
+		- Removed dependency on System.ConfigurationManagement; breaking change if a couple helper overloads were used. The helpers can be restored by adding LazyCacheHelpers.ConfigurationManagement extension package and renaming all calls to LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
+		- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
+		- Initial nuget release for .Net Framework.
+	</PackageReleaseNotes>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
