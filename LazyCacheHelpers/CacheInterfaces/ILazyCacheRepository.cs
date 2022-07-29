@@ -19,5 +19,7 @@ namespace LazyCacheHelpers
     {
         object AddOrGetExisting(string key, object value, CacheItemPolicy cacheItemPolicy);
         void Remove(string key);
+        void ClearAll();
+        long CacheEntryCount();
     }
 }

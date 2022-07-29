@@ -20,5 +20,7 @@ namespace LazyCacheHelpers
         TValue GetOrAddFromCache<TKey>(TKey key, Func<TValue> fnValueFactory, CacheItemPolicy cacheItemPolicy);
         Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<TValue>> fnAsyncValueFactory, CacheItemPolicy cacheItemPolicy);
         void RemoveFromCache<TKey>(TKey key);
+        void ClearEntireCache();
+        long CacheEntryCount();
     }
 }

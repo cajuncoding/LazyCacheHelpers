@@ -36,6 +36,16 @@ namespace LazyCacheHelpersTests
         {
             DefaultLazyCache.RemoveFromCache(cacheKey);
         }
+
+        public static void ClearCache()
+        {
+            DefaultLazyCache.ClearEntireCache();
+        }
+
+        public static long CacheCount()
+        {
+            return DefaultLazyCache.CacheCount();
+        }
     }
 
 

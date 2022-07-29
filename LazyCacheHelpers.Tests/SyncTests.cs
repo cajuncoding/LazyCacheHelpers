@@ -145,6 +145,44 @@ namespace LazyCacheHelpersTests
             Assert.AreNotSame(result1, result3);
         }
 
+
+        [TestMethod]
+        public void TestCacheCountAndClearing()
+        {   
+            //Log the initial size of the Cache because other tests likely have populated into our global Cache
+            //NOTE: This is only an issue for this Test which validates Counts and must have a Reference Point!
+            var initialCacheCount = TestCacheFacade.CacheCount();
+
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheCountAndClearing)}]";
+            var result1 = GetTestDataWithCaching(key, isLongRunning: false);
+            var result2 = GetTestDataWithCaching(key, isLongRunning: false);
+
+            //Validate our initial records match!
+            Assert.AreEqual(result1, result2);
+            Assert.AreSame(result1, result2);
+
+            int addItemsCount = 100;
+            //Populate with additional values to be cleared!
+            var results = Enumerable
+                .Range(1, addItemsCount)
+                .Select(i => GetTestDataWithCaching($"{key}[{i}]", isLongRunning: false))
+                .ToList();
+
+            Assert.AreEqual(initialCacheCount + 1 + addItemsCount, TestCacheFacade.CacheCount());
+
+            //THIS will reset the cache completely!
+            TestCacheFacade.ClearCache();
+
+            Assert.AreEqual(0, TestCacheFacade.CacheCount());
+
+            //Since it's removed then it MUST be newly Initialized
+            //  resulting in a Different Result being returned from Result1
+            var result3 = GetTestDataWithCaching(key);
+            Assert.AreNotEqual(result1, result3);
+            Assert.AreNotSame(result1, result3);
+            Assert.AreEqual(1, TestCacheFacade.CacheCount());
+        }
+
         [TestMethod]
         public void TestCacheEvictionByAbsoluteExpiration()
         {
@@ -216,11 +254,11 @@ namespace LazyCacheHelpersTests
 
         protected static readonly int LongRunningTaskMillis = 1000;
 
-        public static string GetTestDataWithCaching(string key, CacheItemPolicy overrideCacheItemPolicy = null)
+        public static string GetTestDataWithCaching(string key, CacheItemPolicy overrideCacheItemPolicy = null, bool isLongRunning = true)
         {
             return TestCacheFacade.GetCachedData(new TestCacheParams(key, overrideCacheItemPolicy), () =>
             {
-                return SomeLongRunningMethod(DateTime.Now);
+                return SomeLongRunningMethod(DateTime.Now, isLongRunning);
             });
         }
 
@@ -235,10 +273,10 @@ namespace LazyCacheHelpersTests
             );
         }
 
-        public static string SomeLongRunningMethod(DateTime dateTimeParam)
+        public static string SomeLongRunningMethod(DateTime dateTimeParam, bool isLongRunning = true)
         {
             //SOME Code that takes A LOT of time and/or work to compute/retrieve/etc. or never changes?
-            Thread.Sleep(LongRunningTaskMillis);
+            if(isLongRunning) Thread.Sleep(LongRunningTaskMillis);
 
             var guid = Guid.NewGuid();
             var dateTimeString = XmlConvert.ToString(dateTimeParam, XmlDateTimeSerializationMode.Utc);

@@ -41,6 +41,16 @@ namespace LazyCacheHelpers
             _cacheDictionary.TryRemove(key, out _);
         }
 
+        public void ClearAll()
+        {
+            _cacheDictionary.Clear();
+        }
+
+        public long CacheEntryCount()
+        {
+            return _cacheDictionary.Count;
+        }
+
         private class DictionaryCacheEntry
         {
             public DictionaryCacheEntry(string key, object value, CacheItemPolicy cacheItemPolicy)

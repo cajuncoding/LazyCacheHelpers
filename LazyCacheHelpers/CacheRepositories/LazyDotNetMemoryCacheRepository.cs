@@ -21,7 +21,7 @@ namespace LazyCacheHelpers
     /// </summary>
     public class LazyDotNetMemoryCacheRepository : ILazyCacheRepository
     {
-        private readonly MemoryCache _cache;
+        private Lazy<MemoryCache> _lazyCacheHolder;
 
         public LazyDotNetMemoryCacheRepository()
             : this(null)
@@ -30,17 +30,47 @@ namespace LazyCacheHelpers
 
         public LazyDotNetMemoryCacheRepository(MemoryCache memoryCache)
         {
-            _cache = memoryCache ?? MemoryCache.Default;
+            _lazyCacheHolder = memoryCache != null
+                ? new Lazy<MemoryCache>(() => memoryCache)
+                : new Lazy<MemoryCache>(InitializeCacheInternal);
+        }
+
+        protected virtual MemoryCache InitializeCacheInternal()
+        {
+            return new MemoryCache(nameof(LazyDotNetMemoryCacheRepository));
         }
 
         public object AddOrGetExisting(string key, object value, CacheItemPolicy cacheItemPolicy)
         {
-            return _cache.AddOrGetExisting(key, value, cacheItemPolicy);
+            return _lazyCacheHolder.Value.AddOrGetExisting(key, value, cacheItemPolicy);
         }
 
         public void Remove(string key)
         {
-            _cache.Remove(key);
+            _lazyCacheHolder.Value.Remove(key);
+        }
+
+        public void ClearAll()
+        {
+            var existingLazy = _lazyCacheHolder;
+            try
+            {
+                //To Clear efficiently we First Replace/Reset the Lazy Cache Holder...
+                //NOTE: We rely on the Lazy to then control thread safety as our work consists of ONLY swapping the Reference to an uninitialized Lazy<>!
+                _lazyCacheHolder = new Lazy<MemoryCache>(InitializeCacheInternal);
+            }
+            finally
+            {
+                //Now other threads can leverage the newly initialized Lazy while we dispose of the prior one;
+                //  of which the Disposal should Clear all entries and release resources!
+                existingLazy.Value.Dispose();
+                existingLazy = null;
+            }
+        }
+
+        public long CacheEntryCount()
+        {
+            return _lazyCacheHolder.Value.GetCount();
         }
     }
 }

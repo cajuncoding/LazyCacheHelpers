@@ -196,6 +196,20 @@ namespace LazyCacheHelpers
             _cacheRepository.Remove(cacheKey);
         }
 
+        /// <summary>
+        /// BBernard
+        /// Clear/Purge all entries from the underlying Cache Repository.
+        /// </summary>
+        public virtual void ClearEntireCache()
+        {
+           _cacheRepository.ClearAll();
+        }
+
+        public long CacheEntryCount()
+        {
+            return _cacheRepository.CacheEntryCount();
+        }
+
         #region Private Helpers
 
         /// <summary>

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace LazyCacheHelpers
 {
     /// <summary>
-    /// BBernard
+    /// BBernard/CajunCoding
     /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
     /// This class provides simple way to get started with teh LazyCacheHandler by implementing an easy to use 
@@ -24,7 +24,6 @@ namespace LazyCacheHelpers
         private static readonly LazyCacheHandler<object> _lazyCache = new LazyCacheHandler<object>();
 
         /// <summary>
-        /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
         /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
@@ -43,7 +42,6 @@ namespace LazyCacheHelpers
         }
 
         /// <summary>
-        /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
         /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
@@ -64,7 +62,6 @@ namespace LazyCacheHelpers
         }
 
         /// <summary>
-        /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized Asynchronously from Lambda function/logic.
         /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
@@ -83,7 +80,6 @@ namespace LazyCacheHelpers
         }
 
         /// <summary>
-        /// BBernard
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized Asynchronously from Lambda function/logic.
         /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
         /// to initialize the item to be cached -- significantly improving server utilization and performance.
@@ -109,7 +105,6 @@ namespace LazyCacheHelpers
         }
 
         /// <summary>
-        /// BBernard
         /// Remove the item/data corresponding to the specified cache key from the Cache.
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
@@ -117,6 +112,23 @@ namespace LazyCacheHelpers
         public static void RemoveFromCache<TKey>(TKey key)
         {
             _lazyCache.RemoveFromCache(key);
+        }
+
+        /// <summary>
+        /// Clear/Purge all entries from the underlying Cache Repository.
+        /// </summary>
+        public static void ClearEntireCache()
+        {
+            _lazyCache.ClearEntireCache();
+        }
+
+        /// <summary>
+        /// Returns the total count of Cache Entries.
+        /// </summary>
+        /// <returns></returns>
+        public static long CacheCount()
+        {
+            return _lazyCache.CacheEntryCount();
         }
     }
 }
