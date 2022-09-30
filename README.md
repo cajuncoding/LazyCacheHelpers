@@ -56,6 +56,13 @@ LazyCacheConfig.BootstrapConfigValueReader(configKeyName => {
 OR use the ConfigurationManager Bootstrap helper above if you use AppSettings; it'll wire up a default reader for you (see below)!
 
 ## Release Notes:
+### v1.2
+- Add support for Clearing the Lazy Static In-memory Cache
+  - *The wrapper for Lazy caching pattern for sync or async results based on the underlying ConcurrentDictionary<Lazy<T>>).*
+
+### v1.1
+ - Add support for Clearing the Cache and for getting the Cache Count; implemented for DefaultLazyCache as well as the Static In-memory caches.
+
 ### v1.0.4
 - Restored LazyCacheConfig class capabilities for reading values dynamically from Configuration.
 - Added support for Bootstrapping a Configuration Reader Func (Delegate) so that all reading of config values from the keys is completely dynamic now.

@@ -1,13 +1,8 @@
 ﻿using LazyCacheHelpers;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Caching;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using Attr = System.ComponentModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -121,6 +116,46 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual("Obi-Wan Kenobi", cachedEnumDescriptions[StarWarsEnum.ObiWanKenobi].FirstOrDefault());
             Assert.AreEqual("R2-D2", cachedEnumDescriptions[StarWarsEnum.R2D2].FirstOrDefault());
             Assert.AreEqual("C-3PO", cachedEnumDescriptions[StarWarsEnum.C3PO].FirstOrDefault());
+        }
+
+        [TestMethod]
+        public async Task TestClearingStaticInMemoryCacheSyncAndAsync()
+        {
+            var enumCache = new LazyStaticInMemoryCache<Type, ILookup<Enum, string>>();
+            int runCount = 0;
+
+            var loadCacheAsync = new Func<Task>(async () =>
+            {
+                //#1 Load Async Cache item
+                var asyncCachedEnumDescriptions = await enumCache.GetOrAddAsync(typeof(StarWarsEnum), (t) =>
+                {
+                    runCount++;
+                    var enumDescriptionLookup = GetEnumDescriptionsLookup<StarWarsEnum>();
+                    //Simulate Async operation by returning the results as a Task!
+                    return Task.FromResult(enumDescriptionLookup);
+                });
+
+                //#2 Load Sync Cache item
+                var syncCachedEnumDescriptions = enumCache.GetOrAdd(typeof(StarWarsEnum), (t) =>
+                {
+                    runCount++;
+                    return GetEnumDescriptionsLookup<StarWarsEnum>();
+                });
+            });
+
+            //New Cache shoudl always have Zero entries...
+            Assert.AreEqual(0, enumCache.GetCacheCount());
+
+            await loadCacheAsync.Invoke();
+
+            Assert.AreEqual(runCount, enumCache.GetCacheCount());
+            Assert.AreEqual(runCount, enumCache.ClearCache());
+            Assert.AreEqual(0, enumCache.GetCacheCount());
+            runCount = 0;
+
+            //Test Reloading after being cleared with the Exact Same Data, Keys, etc.
+            await loadCacheAsync.Invoke();
+            Assert.AreEqual(runCount, enumCache.GetCacheCount());
         }
 
         [TestMethod]

@@ -17,6 +17,7 @@ namespace LazyCacheHelpers
     {
         protected readonly ConcurrentDictionary<TKey, Lazy<TValue>> _lazySyncCache = new ConcurrentDictionary<TKey, Lazy<TValue>>();
         protected readonly ConcurrentDictionary<TKey, Lazy<Task<TValue>>> _lazyAsyncCache = new ConcurrentDictionary<TKey, Lazy<Task<TValue>>>();
+        protected readonly object _padLock = new object();
 
         /// Initialize a new Synchronous value factory for lazy loading a value from an expensive Async process, and execute the value factory at most one time (ever, across any/all threads).
         /// This provides a robust blocking cache mechanism backed by the Lazy<> class for high performance lazy loading of data that rarely ever changes.
@@ -112,5 +113,26 @@ namespace LazyCacheHelpers
             return _lazyAsyncCache.TryRemove(key, out _);
         }
 
+        public virtual int GetCacheCount()
+        {
+            return _lazyAsyncCache.Count + _lazySyncCache.Count;
+        }
+
+        public virtual int ClearCache()
+        {
+            int clearCount = 0;
+            if (GetCacheCount() > 0)
+                lock (_padLock)
+                    if (GetCacheCount() > 0)
+                    {
+                        clearCount += _lazyAsyncCache.Count;
+                        _lazyAsyncCache.Clear();
+
+                        clearCount += _lazySyncCache.Count;
+                        _lazySyncCache.Clear();
+                    }
+
+            return clearCount;
+        }
     }
 }
