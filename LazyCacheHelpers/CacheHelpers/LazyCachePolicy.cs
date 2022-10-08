@@ -66,7 +66,7 @@ namespace LazyCacheHelpers
         private static readonly ThreadLocal<Random> _threadLocalRandomGenerator = new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
 
         /// <summary>
-        /// Provides logic to randomly distribute Cache TTL values within the specified threshhold to help ensure that
+        /// Provides logic to randomly distribute Cache TTL values within the specified threshold to help ensure that
         ///     cached values are not all exactly equal.  This is helpful to provide dynamic caching that is much less likely
         ///     to result in all elements being expired from cache at the exact same time, but balances this with the fact that
         ///     they should expire relatively close in time.  So the Threshold value should be small; e.g. with 30 seconds, or
@@ -84,7 +84,7 @@ namespace LazyCacheHelpers
             //BBernard
             //Salt the timespan with a small randomly generated offset value (e.g. spice it up a little with some salt)!
             //NOTE: We use a random number generator to help us salt our Cache intervals and better
-            //  stimilate offset caching of items.  This is a simplistic way to help level out the 
+            //  stimulate offset caching of items.  This is a simplistic way to help level out the 
             //  cache hit/miss distribution so that fewer requests take the same large hit to refresh
             //  when they expire by absolute time.
             //For Example: If in a high load environment multiple requests could all result in cache misses

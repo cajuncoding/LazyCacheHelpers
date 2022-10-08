@@ -1,40 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Description>Library for leveraging the power of the Lazy class to enable high performance caching at all layers of an application. It provides support for both Sync and Async Lazy caching operations in an extremely lightweight and simple footprint -- with passive cache coding style using Lambdas to maximize server utilization and performance with a blocking, or self-populating, cache implementation!</Description>
-    <Copyright>Copyright (c) 2018</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Authors>BBernard / CajunCoding</Authors>
-    <Company>CajunCoding</Company>
-    <PackageProjectUrl>https://github.com/cajuncoding/LazyCacheHelpers</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/cajuncoding/LazyCacheHelpers</RepositoryUrl>
-    <PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
-    <PackageReleaseNotes>
-		- Add support for Clearing the Lazy Static In-memory Cache (wrapper for Lazy caching pattern for sync or async results based on the underlying ConcurrentDictionary&lt;Lazy&lt;T&gt;&gt;).
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Copyright>Copyright (c) 2018</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Authors>BBernard / CajunCoding</Authors>
+		<Company>CajunCoding</Company>
+		<PackageProjectUrl>https://github.com/cajuncoding/LazyCacheHelpers</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/cajuncoding/LazyCacheHelpers</RepositoryUrl>
+		<Description>Library for leveraging the power of the Lazy class to enable high performance caching at all layers of an application. It provides support for both Sync and Async Lazy caching operations in an extremely lightweight and simple footprint -- with passive cache coding style using Lambdas to maximize server utilization and performance with a blocking, or self-populating, cache implementation!</Description>
+		<PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
+		<PackageReleaseNotes>
+			- Add support for Clearing the Lazy Static In-memory Cache (wrapper for Lazy caching pattern for sync or async results based on the underlying ConcurrentDictionary&lt;Lazy&lt;T&gt;&gt;).
 
-		Prior Release Notes:
-		- Add support for Clearing the Cache and for getting the Cache Count; implemented for DefaultLazyCache as well as the Static In-memory caches.
-		- Restored LazyCacheConfig class capabilities for reading values dynamically from Configuration.
-		- Added support for Bootstrapping a Configuration Reader Func (Delegate) so that all reading of config values from the keys is completely dynamic now.
-		- Added new LazyStaticInMemoryCache&lt;&gt; class to make it significantly easier to implement in-memory caching of data that rarely or never changes with the lazy loading, blocking cache, pattern; great for minimizing the runtime impact of expensive Reflection or I/O Async logic for data that rarely or never changes.
-		- Refactored as .Net Standard v2.0 compatible Library for greater compatibility
-		- Removed dependency on System.ConfigurationManagement; breaking change if a couple helper overloads were used. The helpers can be restored by adding LazyCacheHelpers.ConfigurationManagement extension package and renaming all calls to LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
-		- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
-		- Initial nuget release for .Net Framework.
-	</PackageReleaseNotes>
-    <Version>1.2.0</Version>
-  </PropertyGroup>
+			Prior Release Notes:
+			- Add support for Clearing the Cache and for getting the Cache Count; implemented for DefaultLazyCache as well as the Static In-memory caches.
+			- Restored LazyCacheConfig class capabilities for reading values dynamically from Configuration.
+			- Added support for Bootstrapping a Configuration Reader Func (Delegate) so that all reading of config values from the keys is completely dynamic now.
+			- Added new LazyStaticInMemoryCache&lt;&gt; class to make it significantly easier to implement in-memory caching of data that rarely or never changes with the lazy loading, blocking cache, pattern; great for minimizing the runtime impact of expensive Reflection or I/O Async logic for data that rarely or never changes.
+			- Refactored as .Net Standard v2.0 compatible Library for greater compatibility
+			- Removed dependency on System.ConfigurationManagement; breaking change if a couple helper overloads were used. The helpers can be restored by adding LazyCacheHelpers.ConfigurationManagement extension package and renaming all calls to LazyCachePolicy static helper to now use LazyCachePolicyFromConfig static helper.
+			- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
+			- Initial nuget release for .Net Framework.
+		</PackageReleaseNotes>
+		<Version>1.2.0</Version>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\README.md" Link="README.md" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="..\README.md" Link="README.md" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Properties\" />
+	</ItemGroup>
 </Project>

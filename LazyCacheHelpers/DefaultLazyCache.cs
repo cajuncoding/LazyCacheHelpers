@@ -56,8 +56,29 @@ namespace LazyCacheHelpers
             where TValue : class
         {
             TValue result = LazyCachePolicy.IsPolicyEnabled(cacheItemPolicy)
-                                ? (TValue) _lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy)
-                                : fnValueFactory();
+                ? (TValue) _lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy)
+                : fnValueFactory();
+            return result;
+        }
+
+        /// <summary>
+        /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
+        /// In this overload the logic must also construct and return the result as well as the cache expiration policy together
+        /// as any implementation of ILazySelfExpiringCacheResult&lt;TValue&gt; of which a default implementation can be easily
+        /// created from LazySelfExpiringCacheResult&lt;TValue&gt;.NewAbsoluteExpirationResult(...).
+        /// 
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
+        /// to initialize the item to be cached (Self-populated Cache) -- significantly improving server utilization and performance.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="fnValueFactory"></param>
+        /// <returns></returns>
+        public static TValue GetOrAddFromCache<TKey, TValue>(TKey key, Func<ILazySelfExpiringCacheResult<TValue>> fnValueFactory)
+            where TValue : class
+        {
+            var result = (TValue)_lazyCache.GetOrAddFromCache(key, fnValueFactory);
             return result;
         }
 
@@ -98,9 +119,34 @@ namespace LazyCacheHelpers
             var wrappedFnValueFactory = new Func<Task<object>>(async () => await fnAsyncValueFactory());
 
             TValue result = LazyCachePolicy.IsPolicyEnabled(cacheItemPolicy)
-                                ? (TValue) await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory, cacheItemPolicy)
-                                : await fnAsyncValueFactory();
+                ? (TValue)await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory, cacheItemPolicy)
+                : await fnAsyncValueFactory();
 
+            return result;
+        }
+
+        /// <summary>
+        /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
+        /// In this overload the logic must also construct and return the result as well as the cache expiration policy together
+        /// as any implementation of ILazySelfExpiringCacheResult&lt;TValue&gt; of which a default implementation can be easily
+        /// created from LazySelfExpiringCacheResult&lt;TValue&gt;.NewAbsoluteExpirationResult(...).
+        /// 
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
+        /// to initialize the item to be cached (Self-populated Cache) -- significantly improving server utilization and performance.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="fnAsyncValueFactory"></param>
+        /// <returns></returns>
+        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<ILazySelfExpiringCacheResult<TValue>>> fnAsyncValueFactory)
+            where TValue : class
+        {
+            //Because the underlying cache is set up to store any object and the async coercion isn't as easy as the synchronous,
+            //  we must wrap the original generics typed async factory into a new Func<> that matches the required type.
+            var wrappedFnValueFactory = new Func<Task<ILazySelfExpiringCacheResult<object>>>(async () => await fnAsyncValueFactory());
+
+            var result = (TValue)await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory);
             return result;
         }
 
