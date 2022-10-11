@@ -5,8 +5,8 @@ namespace LazyCacheHelpers
 {
     public class LazySelfExpiringCacheResult<TValue> : ILazySelfExpiringCacheResult<TValue>
     {
-        public LazySelfExpiringCacheResult(TValue cacheItem, ILazyCachePolicy cachePolicy)
-            : this(cacheItem, cachePolicy?.GeneratePolicy())
+        public LazySelfExpiringCacheResult(TValue cacheItem, ILazyCachePolicy cachePolicyFactory)
+            : this(cacheItem, cachePolicyFactory?.GeneratePolicy() ?? throw new ArgumentNullException(nameof(cachePolicyFactory)))
         { }
 
         public LazySelfExpiringCacheResult(TValue cacheItem, CacheItemPolicy cachePolicy)
@@ -15,9 +15,9 @@ namespace LazyCacheHelpers
             CachePolicy = cachePolicy ?? throw new ArgumentNullException(nameof(cachePolicy));
         }
 
-        public CacheItemPolicy CachePolicy { get; }
+        public CacheItemPolicy CachePolicy { get; protected set; }
 
-        public TValue CacheItem { get; }
+        public TValue CacheItem { get; protected set; }
 
         public static ILazySelfExpiringCacheResult<TValue> From(TValue cacheItem, int absoluteExpirationMillis)
             => From(cacheItem, TimeSpan.FromMilliseconds(absoluteExpirationMillis));
@@ -37,8 +37,8 @@ namespace LazyCacheHelpers
         public static ILazySelfExpiringCacheResult<TValue> From<TValue>(TValue cacheItem, TimeSpan absoluteExpirationTimeSpan)
             => new LazySelfExpiringCacheResult<TValue>(cacheItem, LazyCachePolicy.NewAbsoluteExpirationPolicy(absoluteExpirationTimeSpan));
 
-        public static ILazySelfExpiringCacheResult<TValue> From<TValue>(TValue cacheItem, CacheItemPolicy cacheEvictionPolicy)
-            => new LazySelfExpiringCacheResult<TValue>(cacheItem, cacheEvictionPolicy);
+        public static ILazySelfExpiringCacheResult<TValue> From<TValue>(TValue cacheItem, CacheItemPolicy cacheItemPolicy)
+            => new LazySelfExpiringCacheResult<TValue>(cacheItem, cacheItemPolicy);
 
     }
 }
