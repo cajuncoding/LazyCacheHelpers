@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Runtime.Caching;
+using System.Threading;
+using Nito.AsyncEx;
 
 namespace LazyCacheHelpers
 {
@@ -23,12 +28,14 @@ namespace LazyCacheHelpers
     /// NOTE: A wrapper implementation for MemoryCache is implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) to 
     ///     make working with MemoryCache with greatly simplified support for self-populating (Lazy) initialization.
     /// </summary>
-    public class LazyCacheHandler<TValue> : ILazyCacheHandler<TValue>, ILazyCacheHandlerSelfExpiringResults<TValue> where TValue : class
+    public class LazyCacheHandler<TValue> : ILazyCacheHandler<TValue>, ILazyCacheHandlerSelfExpiring<TValue>, IDisposable where TValue : class
     {
         //Added methods to CacheHelper to work with MemoryCache more easily.
         //NOTE: .Net MemoryCache supports this does NOT support Garbage Collection and Resource Reclaiming so it should
         //      be used whenever caching dynamic runtime data.
         private readonly ILazyCacheRepository _cacheRepository;
+
+        private readonly AsyncReaderWriterLock _selfExpiringReaderWriterLock = new AsyncReaderWriterLock();
 
         /// <summary>
         /// Initializes with the specified cacheRepository; if null is specified then DotNetMemoryCacheRepository (leveraging MemoryCache.Default) is used.
@@ -110,6 +117,8 @@ namespace LazyCacheHelpers
         /// and external API calls whereby the response contains information about how long the data returned is valid. And therefore
         /// the response can be used to construct a highly optimized Cache Expiration Policy based on the data returned -- rather than
         /// simply guessing and/or hard coding how long the data is valid for.
+        /// NOTE: There is a small amount of overhead to support this feature due to the need to manually check for existence and
+        ///         lock to to generate the result and policy.
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <param name="key"></param>
@@ -121,27 +130,47 @@ namespace LazyCacheHelpers
             if (fnValueFactory == null)
                 throw new ArgumentNullException(nameof(fnValueFactory));
 
-            //TODO: WIP: TEST THAT this REF Approach works...
-            CacheItemPolicy cacheItemPolicyFromResultRef = null;
-            return GetOrAddFromCache(key, () =>
+            ILazySelfExpiringCacheResult<TValue> selfExpiringCacheResult = null;
+            TValue cacheResult;
+
+            using (var readLock = _selfExpiringReaderWriterLock.ReaderLock())
+            {
+                cacheResult = GetOrAddFromCache(key, () =>
+                    {
+                        //Wrap and Set the captured self-expiring cache result when-and-only-when this value factory executes;
+                        //  ensuring that this runs only on initial load when the very first request executes it!
+                        selfExpiringCacheResult = fnValueFactory();
+                        return selfExpiringCacheResult.CacheItem;
+                    },
+                    //To ensure that we fully support self-populating cache implementation (so that all other requests get the result of
+                    //  the work completed by the very first request we always enforce an Infinite Cache initially, but it will be immediately
+                    //  re-initialized with the correct self-expiring policy returned after value factory is initially invoked (below)!
+                    //NOTE: Though the only thread that will do this is the initial thread.
+                    LazyCachePolicy.InfiniteCachingPolicy
+                );
+            }
+
+            if (selfExpiringCacheResult != null)
+            {
+                //Since the Cache Policy is only available after the Cache Value Factory has executed we must now utilize the results
+                //  to safely initialize the Cache with the valid Policy!
+                //NOTE: There is a risk that while we remove and update the cache item with the correct policy that another request
+                //      might attempt to get it from the cache at this same time. Therefore to ensure that we are 100% self-populating we
+                //      must initialize the WriteLock to block all Readers while this update occurs!
+                //NOTE: This works as designed because the read/write lock will block the write (below) until all simultaneous reads are fulfilled
+                //      (which will be fast as the cache fulfills them), and then block further reads while the valid update write is fulfilled to invoke the correct Policy!
+                //NOTE: Due to the Reader/Writer lock process this incurs some minimal additional overhead, but ONLY for the initial cache invocation and 
+                //      only if the value factory executes, therefore with Reader/Writer lock this is still fully self-populating and
+                //      has negligible impact to enforcing support as a self-populating cache (relative to the cost of executing the value factory more than once).
+                using (var readLock = _selfExpiringReaderWriterLock.WriterLock())
                 {
-                    //Execute the original Cache Factory method... 
-                    var selfExpiringCacheResult = fnValueFactory.Invoke();
-                    //Now unwrap the results and set our CacheItemPolicy Reference from the result into our captured ref...
-                    cacheItemPolicyFromResultRef = selfExpiringCacheResult.CachePolicy;
+                    //REMOVE and then Add the already computed Cache Result immediately with the now-known Cache Policy!
+                    RemoveFromCache(key);
+                    GetOrAddFromCache(key, () => cacheResult, selfExpiringCacheResult.CachePolicy);
+                }
+            }
 
-                    //Validate that the returned policy is valid; otherwise we used a Disabled Cache Policy fallback to ensure
-                    //  that the code still runs without issue...
-                    if (!LazyCachePolicy.IsPolicyEnabled(cacheItemPolicyFromResultRef))
-                        cacheItemPolicyFromResultRef = LazyCachePolicy.DisabledCachingPolicy;
-
-                    //Finally return the actual result just as a normal cache item factory would...
-                    return selfExpiringCacheResult.CacheItem;
-                },
-                //Here we pass in our Ref that will be dynamically updated by the cache item factory if it executes,
-                //  otherwise this will not be used since the value is loaded from the cache...
-                cacheItemPolicyFromResultRef
-            );
+            return cacheResult;
         }
 
         /// <summary>
@@ -246,32 +275,52 @@ namespace LazyCacheHelpers
         /// <param name="fnAsyncValueFactory"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<ILazySelfExpiringCacheResult<TValue>>> fnAsyncValueFactory)
+        public async Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<ILazySelfExpiringCacheResult<TValue>>> fnAsyncValueFactory)
         {
             if (fnAsyncValueFactory == null)
                 throw new ArgumentNullException(nameof(fnAsyncValueFactory));
 
-            //TODO: WIP: TEST THAT this REF Approach works...
-            CacheItemPolicy cacheItemPolicyFromResultRef = null;
-            return GetOrAddFromCacheAsync(key, async () =>
-                {
-                    //Execute the original Cache Factory method... 
-                    var selfExpiringCacheResult = await fnAsyncValueFactory.Invoke();
-                    //Now unwrap the results and set our CacheItemPolicy Reference from the result into our captured ref...
-                    cacheItemPolicyFromResultRef = selfExpiringCacheResult.CachePolicy;
-                    
-                    //Validate that the returned policy is valid; otherwise we used a Disabled Cache Policy fallback to ensure
-                    //  that the code still runs without issue...
-                    if (!LazyCachePolicy.IsPolicyEnabled(cacheItemPolicyFromResultRef))
-                        cacheItemPolicyFromResultRef = LazyCachePolicy.DisabledCachingPolicy;
+            ILazySelfExpiringCacheResult<TValue> selfExpiringCacheResult = null;
+            TValue cacheResult;
 
-                    //Finally return the actual result just as a normal cache item factory would...
-                    return selfExpiringCacheResult.CacheItem;
-                },
-                //Here we pass in our Ref that will be dynamically updated by the cache item factory if it executes,
-                //  otherwise this will not be used since the value is loaded from the cache...
-                cacheItemPolicyFromResultRef
-            );
+            using (var readLock = await _selfExpiringReaderWriterLock.ReaderLockAsync())
+            {
+                cacheResult = await GetOrAddFromCacheAsync(key, async () =>
+                    {
+                        //Wrap and Set the captured self-expiring cache result when-and-only-when this value factory executes;
+                        //  ensuring that this runs only on initial load when the very first request executes it!
+                        selfExpiringCacheResult = await fnAsyncValueFactory();
+                        return selfExpiringCacheResult.CacheItem;
+                    },
+                    //To ensure that the value is not cached we specify DisableCachePolicy so that it can be re-initialized with the
+                    //  self-expiring policy returned after value factory is initially invoked (below)!
+                    LazyCachePolicy.InfiniteCachingPolicy
+                );
+            }
+
+            //NOTE: Since the Lazy cache already enforces that one-and-only-one value factory will execute this is optimized
+            //      to only execute on the thread single request that executed the value factory...
+            if (selfExpiringCacheResult != null)
+            {
+                //Since the Cache Policy is only available after the Cache Value Factory has executed we must now utilize the results
+                //  to safely initialize the Cache with the valid Policy!
+                //NOTE: There is a risk that while we remove and update the cache item with the correct policy that another request
+                //      might attempt to get it from the cache at this same time. Therefore to ensure that we are 100% self-populating we
+                //      must initialize the WriteLock to block all Readers while this update occurs!
+                //NOTE: This works as designed because the read/write lock will block the write (below) until all simultaneous reads are fulfilled
+                //      (which will be fast as the cache fulfills them), and then block further reads while the valid update write is fulfilled to invoke the correct Policy!
+                //NOTE: Due to the Reader/Writer lock process this incurs some minimal additional overhead, but ONLY for the initial cache invocation and 
+                //      only if the value factory executes, therefore with Reader/Writer lock this is still fully self-populating and
+                //      has negligible impact to enforcing support as a self-populating cache (relative to the cost of executing the value factory more than once).
+                using (var readLock = await _selfExpiringReaderWriterLock.WriterLockAsync())
+                {
+                    //REMOVE and then Add the already computed Cache Result immediately with the now-known Cache Policy!
+                    RemoveFromCache(key);
+                    await GetOrAddFromCacheAsync(key, () => Task.FromResult(cacheResult), selfExpiringCacheResult.CachePolicy);
+                }
+            }
+
+            return cacheResult;
         }
 
         /// <summary>
@@ -324,6 +373,26 @@ namespace LazyCacheHelpers
 
             var generatedKey = (cacheKeyGenerator as ILazyCacheKey)?.GenerateKey() ?? cacheKeyGenerator.ToString();
             return generatedKey;
+        }
+
+        #endregion
+
+        #region IDisposable Implementation
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.ClearEntireCache();
+                if(_cacheRepository is IDisposable disposableRepository)
+                    disposableRepository.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         #endregion

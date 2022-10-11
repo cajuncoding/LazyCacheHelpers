@@ -8,10 +8,19 @@ namespace LazyCacheHelpers
     /// BBernard
     /// Original Source (MIT License): https://github.com/cajuncoding/LazyCacheHelpers
     /// 
-    /// This class provides a simple wrapper facade to much more easily manage in-memory data cache for storing and caching Lazy<T> loaded results that rarely ever change.
-    /// It provides support for both Synchronous and Async processes that are defined as value factory delegates (very easy with Lambda expressions).
+    /// This class provides a simple wrapper facade to much more easily manage in-memory data cache for storing and caching Lazy&lt;T&gt; loaded results that rarely ever change
+    /// from either synchronous or async value factories provided.
+    ///
+    /// The values generated & stored in this cache can be removed manually but will never automatically expire as there is no "cache eviction policy" support in this. It provides a greatly
+    /// simplified wrapper for Lazy initialized values that are self-populating with thread safety; encapsulating the Lazy + ConcurrentDictionary pattern in a
+    /// class that greatly simplifies it's use as well as handling of exceptions .
+    ///
+    /// In addition, this class provides support for both Synchronous and Async processes that are defined as value factory delegates (very easy with Lambda expressions).
     /// This facade eliminates the redundancy of managing the ConcurrentDictionary and Lazy wrappers and uses generics to provide a simple GetOrAdd() and TryRemove() method
     /// that takes in  Key and returns teh cached result from in-memory or generated from teh value factory via very efficient blocking-cache pattern!
+    ///
+    /// NOTE: A Significant difference between this and the DefaultLazyCache is that this is a Static in-memory holder of values that does inherently support garbage collection
+    ///         or release/reclaiming of resources as the full blown .Net Memory Cache does; unless you manually implement your own weak references that are stored in this cache.
     /// </summary>
     public class LazyStaticInMemoryCache<TKey, TValue>
     {

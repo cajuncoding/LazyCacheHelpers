@@ -45,6 +45,27 @@ namespace LazyCacheHelpersTests
         }
 
         [TestMethod]
+        public async Task TestCacheHitsForSelfExpiringResultsAsync()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(GetTestDataWithCachingForSelfExpiringResultsAsync)}]";
+
+            var result1 = await GetTestDataWithCachingForSelfExpiringResultsAsync(key);
+            var result2 = await GetTestDataWithCachingForSelfExpiringResultsAsync(key);
+            var result3 = await GetTestDataWithCachingForSelfExpiringResultsAsync(key);
+            var result4 = await GetTestDataWithCachingForSelfExpiringResultsAsync(key);
+
+            Assert.AreEqual(result1, result2);
+            Assert.AreSame(result1, result2);
+
+            Assert.AreEqual(result3, result4);
+            Assert.AreSame(result3, result4);
+
+            //Compare First and Last to ensure that ALL are the same!
+            Assert.AreEqual(result1, result4);
+            Assert.AreSame(result1, result4);
+        }
+
+        [TestMethod]
         public async Task TestCacheMissesAsync()
         {
             int c = 0;
@@ -63,6 +84,24 @@ namespace LazyCacheHelpersTests
             Assert.AreEqual(results.Count, distinctCount);
         }
 
+        [TestMethod]
+        public async Task TestCacheMissesForSelfExpiringResultsAsync()
+        {
+            int c = 0;
+            string key = $"CachedDataWithDifferentKey[{nameof(TestCacheMissesAsync)}]";
+            var results = new List<string>()
+            {
+                await GetTestDataWithCachingForSelfExpiringResultsAsync($"{key}[{++c}]"),
+                await GetTestDataWithCachingForSelfExpiringResultsAsync($"{key}[{++c}]"),
+                await GetTestDataWithCachingForSelfExpiringResultsAsync($"{key}[{++c}]"),
+                await GetTestDataWithCachingForSelfExpiringResultsAsync($"{key}[{++c}]")
+            };
+
+            var distinctCount = results.Distinct().Count();
+
+            //Ensure that ALL Items are Distinctly Different!
+            Assert.AreEqual(results.Count, distinctCount);
+        }
 
         [TestMethod]
         public async Task TestCacheMissesBecauseOfDisabledPolicyAsync()
@@ -164,7 +203,53 @@ namespace LazyCacheHelpersTests
             //  meaning globalCount is only ever incremented 1 time!
             Assert.AreEqual(1, globalCount);
 
-            //Ensure ONLY ONE item was ever generated and ALL other's were identical from Cache!
+            //Ensure ONLY ONE item was ever generated and ALL others were identical from Cache!
+            Assert.AreEqual(1, distinctCount);
+
+            //Ensure that the Total time takes barely longer than one iteration of the Long Running Task!
+            Assert.IsTrue(timer.ElapsedMilliseconds < (LongRunningTaskMillis * 2));
+        }
+
+        [TestMethod]
+        public async Task TestCacheThreadSafetyForSelfExpiringResultsAsync()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheThreadSafetyForSelfExpiringResultsAsync)}]";
+            int secondsTTL = 300;
+            int threadCount = 1000;
+            var globalCount = 0;
+            var timer = Stopwatch.StartNew();
+
+            var tasks = new List<Task<string>>();
+            for (int x = 0; x < threadCount; x++)
+            {
+                //Simulated MANY threads running at the same time attempting to get the same data for the same Cache key!!!
+                tasks.Add(Task.Run(async () =>
+                {
+                    //THIS RUNS ON IT'S OWN THREAD, but the Lazy Cache initialization will ensure that the Value Factory Function
+                    //  is only executed by the FIRST thread, and all other threads will immediately benefit from the result!
+                    return await TestCacheFacade.GetCachedSelfExpiringDataAsync(new TestCacheParams(key), async () =>
+                    {
+                        //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+                        //  meaning globalCount is only ever incremented 1 time!
+                        Interlocked.Increment(ref globalCount);
+
+                        //TEST that the cached data is never re-generated so only ONE Value is ever created!
+                        var longTaskResult = await SomeLongRunningMethodAsync(DateTime.Now);
+                        return LazySelfExpiringCacheResult.From(longTaskResult, secondsTTL);
+                    });
+                }));
+            }
+
+            //Allow all threads to complete and get the results...
+            var results = await Task.WhenAll(tasks.ToArray());
+            var distinctCount = results.Distinct().Count();
+            timer.Stop();
+
+            //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+            //  meaning globalCount is only ever incremented 1 time!
+            Assert.AreEqual(1, globalCount);
+
+            //Ensure ONLY ONE item was ever generated and ALL others were identical from Cache!
             Assert.AreEqual(1, distinctCount);
 
             //Ensure that the Total time takes barely longer than one iteration of the Long Running Task!
@@ -180,6 +265,15 @@ namespace LazyCacheHelpersTests
             return await TestCacheFacade.GetCachedDataAsync(new TestCacheParams(key, overrideCacheItemPolicy), async () =>
             {
                 return await SomeLongRunningMethodAsync(DateTime.Now);
+            });
+        }
+
+        public static async Task<string> GetTestDataWithCachingForSelfExpiringResultsAsync(string key, int secondsTTL = 5, bool isLongRunning = true)
+        {
+            return await TestCacheFacade.GetCachedSelfExpiringDataAsync(new TestCacheParams(key), async () =>
+            {
+                var cacheResult = await SomeLongRunningMethodAsync(DateTime.Now);
+                return LazySelfExpiringCacheResult.From(cacheResult, secondsTTL);
             });
         }
 

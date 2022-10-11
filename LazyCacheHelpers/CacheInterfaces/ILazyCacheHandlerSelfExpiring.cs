@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Caching;
 using System.Threading.Tasks;
 
 namespace LazyCacheHelpers
@@ -18,7 +17,7 @@ namespace LazyCacheHelpers
     /// to mitigate potentially breaking existing custom implementations of the ILazyCacheHandler.
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
-    public interface ILazyCacheHandlerSelfExpiringResults<TValue>
+    public interface ILazyCacheHandlerSelfExpiring<TValue>
     {
         TValue GetOrAddFromCache<TKey>(TKey key, Func<ILazySelfExpiringCacheResult<TValue>> fnValueFactory);
         Task<TValue> GetOrAddFromCacheAsync<TKey>(TKey key, Func<Task<ILazySelfExpiringCacheResult<TValue>>> fnAsyncValueFactory);

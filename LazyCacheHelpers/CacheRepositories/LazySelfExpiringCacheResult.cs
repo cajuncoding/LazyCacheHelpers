@@ -19,10 +19,26 @@ namespace LazyCacheHelpers
 
         public TValue CacheItem { get; }
 
-        public static LazySelfExpiringCacheResult<TValue> NewAbsoluteExpirationResult(TValue cacheItem, int absoluteExpirationMillis)
-            => NewAbsoluteExpirationResult(cacheItem, TimeSpan.FromMilliseconds(absoluteExpirationMillis));
+        public static ILazySelfExpiringCacheResult<TValue> From(TValue cacheItem, int absoluteExpirationMillis)
+            => From(cacheItem, TimeSpan.FromMilliseconds(absoluteExpirationMillis));
 
-        public static LazySelfExpiringCacheResult<TValue> NewAbsoluteExpirationResult(TValue cacheItem, TimeSpan absoluteExpirationTimeSpan)
+        public static ILazySelfExpiringCacheResult<TValue> From(TValue cacheItem, TimeSpan absoluteExpirationTimeSpan)
             => new LazySelfExpiringCacheResult<TValue>(cacheItem, LazyCachePolicy.NewAbsoluteExpirationPolicy(absoluteExpirationTimeSpan));
+    }
+
+    /// <summary>
+    /// Static convenience class to simplify instantiation of Generic type directly from Cache Result Type...
+    /// </summary>
+    public static class LazySelfExpiringCacheResult
+    {
+        public static ILazySelfExpiringCacheResult<TValue> From<TValue>(TValue cacheItem, int secondsTTL)
+            => From(cacheItem, TimeSpan.FromSeconds(secondsTTL));
+
+        public static ILazySelfExpiringCacheResult<TValue> From<TValue>(TValue cacheItem, TimeSpan absoluteExpirationTimeSpan)
+            => new LazySelfExpiringCacheResult<TValue>(cacheItem, LazyCachePolicy.NewAbsoluteExpirationPolicy(absoluteExpirationTimeSpan));
+
+        public static ILazySelfExpiringCacheResult<TValue> From<TValue>(TValue cacheItem, CacheItemPolicy cacheEvictionPolicy)
+            => new LazySelfExpiringCacheResult<TValue>(cacheItem, cacheEvictionPolicy);
+
     }
 }

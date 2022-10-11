@@ -18,9 +18,10 @@ namespace LazyCacheHelpers
         /// Static Reference to a CacheItemPolicy that represents a completely Disabled cache with an AbsoluteExpiration of DateTimeOffset.MinValue (e.g. beginning-of-time).
         /// </summary>
         public static CacheItemPolicy DisabledCachingPolicy => new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.MinValue };
+        public static CacheItemPolicy InfiniteCachingPolicy => new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.MaxValue };
 
         /// <summary>
-        /// Helper method to abstract logic for determining if a CacheItemPolicy is disabled (e.g. AbsoluteExpiration of DateTimeOffset.MinValue).
+        /// Helper method to abstract logic for determining if a CacheItemPolicy is disabled or same as LazyCachePolicy.DisabledCachingPolicy (e.g. AbsoluteExpiration of DateTimeOffset.MinValue).
         /// </summary>
         /// <param name="policy"></param>
         /// <returns></returns>

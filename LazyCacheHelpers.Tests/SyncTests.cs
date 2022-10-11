@@ -44,6 +44,27 @@ namespace LazyCacheHelpersTests
         }
 
         [TestMethod]
+        public void TestCacheHitsForSelfExpiringResults()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheHitsForSelfExpiringResults)}]";
+
+            var result1 = GetTestDataWithCachingForSelfExpiringResults(key);
+            var result2 = GetTestDataWithCachingForSelfExpiringResults(key);
+            var result3 = GetTestDataWithCachingForSelfExpiringResults(key);
+            var result4 = GetTestDataWithCachingForSelfExpiringResults(key);
+
+            Assert.AreEqual(result1, result2);
+            Assert.AreSame(result1, result2);
+
+            Assert.AreEqual(result3, result4);
+            Assert.AreSame(result3, result4);
+
+            //Compare First and Last to ensure that ALL are the same!
+            Assert.AreEqual(result1, result4);
+            Assert.AreSame(result1, result4);
+        }
+
+        [TestMethod]
         public void TestCacheMisses()
         {
             int c = 0;
@@ -54,6 +75,25 @@ namespace LazyCacheHelpersTests
                 GetTestDataWithCaching($"{key}[{++c}]"),
                 GetTestDataWithCaching($"{key}[{++c}]"),
                 GetTestDataWithCaching($"{key}[{++c}]")
+            };
+
+            var distinctCount = results.Distinct().Count();
+
+            //Ensure that ALL Items are Distinctly Different!
+            Assert.AreEqual(results.Count, distinctCount);
+        }
+
+        [TestMethod]
+        public void TestCacheMissesForSelfExpiringResults()
+        {
+            int c = 0;
+            string key = $"CachedDataWithDifferentKey[{nameof(TestCacheMisses)}]";
+            var results = new List<string>()
+            {
+                GetTestDataWithCachingForSelfExpiringResults($"{key}[{++c}]"),
+                GetTestDataWithCachingForSelfExpiringResults($"{key}[{++c}]"),
+                GetTestDataWithCachingForSelfExpiringResults($"{key}[{++c}]"),
+                GetTestDataWithCachingForSelfExpiringResults($"{key}[{++c}]")
             };
 
             var distinctCount = results.Distinct().Count();
@@ -144,7 +184,6 @@ namespace LazyCacheHelpersTests
             Assert.AreNotEqual(result1, result3);
             Assert.AreNotSame(result1, result3);
         }
-
 
         [TestMethod]
         public void TestCacheCountAndClearing()
@@ -243,7 +282,53 @@ namespace LazyCacheHelpersTests
             //  meaning globalCount is only ever incremented 1 time!
             Assert.AreEqual(1, globalCount);
 
-            //Ensure ONLY ONE item was ever generated and ALL other's were identical from Cache!
+            //Ensure ONLY ONE item was ever generated and ALL others were identical from Cache!
+            Assert.AreEqual(1, distinctCount);
+
+            //Ensure that the Total time takes barely longer than one iteration of the Long Running Task!
+            Assert.IsTrue(timer.ElapsedMilliseconds < (LongRunningTaskMillis * 2));
+        }
+
+        [TestMethod]
+        public async Task TestCacheThreadSafetyForSelfExpiringCacheResults()
+        {
+            string key = $"CachedDataWithSameKey[{nameof(TestCacheThreadSafetyForSelfExpiringCacheResults)}]";
+            int secondsTTL = 300;
+            int threadCount = 1000;
+            var globalCount = 0;
+            var timer = Stopwatch.StartNew();
+
+            var tasks = new List<Task<string>>();
+            for (int x = 0; x < threadCount; x++)
+            {
+                //Simulated MANY threads running at the same time attempting to get the same data for the same Cache key!!!
+                tasks.Add(Task.Run(() =>
+                {
+                    //THIS RUNS ON IT'S OWN THREAD, but the Lazy Cache initialization will ensure that the Value Factory Function
+                    //  is only executed by the FIRST thread, and all other threads will immediately benefit from the result!
+                    return TestCacheFacade.GetCachedSelfExpiringData(new TestCacheParams(key), () =>
+                    {
+                        //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+                        //  meaning globalCount is only ever incremented 1 time!
+                        Interlocked.Increment(ref globalCount);
+
+                        //TEST that the cached data is never re-generated so only ONE Value is ever created!
+                        var longTaskResult = SomeLongRunningMethod(DateTime.Now);
+                        return LazySelfExpiringCacheResult.From(longTaskResult, secondsTTL);
+                    });
+                }));
+            }
+
+            //Allow all threads to complete and get the results...
+            var results = await Task.WhenAll(tasks.ToArray());
+            var distinctCount = results.Distinct().Count();
+            timer.Stop();
+
+            //TEST that this Code ONLY ever runs ONE TIME by ONE THREAD via Lazy<> initialization!
+            //  meaning globalCount is only ever incremented 1 time!
+            Assert.AreEqual(1, globalCount);
+
+            //Ensure ONLY ONE item was ever generated and ALL others were identical from Cache!
             Assert.AreEqual(1, distinctCount);
 
             //Ensure that the Total time takes barely longer than one iteration of the Long Running Task!
@@ -262,7 +347,16 @@ namespace LazyCacheHelpersTests
             });
         }
 
-        public static string GetTestDataWithCachingAndTTL(string key, int secondsTTL)
+        public static string GetTestDataWithCachingForSelfExpiringResults(string key, int secondsTTL = 5, bool isLongRunning = true)
+        {
+            return TestCacheFacade.GetCachedSelfExpiringData(new TestCacheParams(key), () =>
+            {
+                var cacheResult = SomeLongRunningMethod(DateTime.Now, isLongRunning);
+                return LazySelfExpiringCacheResult.From(cacheResult, secondsTTL);
+            });
+        }
+
+        public static string GetTestDataWithCachingAndTTL(string key, int secondsTTL = 5)
         {
             return TestCacheFacade.GetCachedData(
                 new TestCacheParams(key, secondsTTL), 

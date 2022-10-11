@@ -16,54 +16,56 @@ namespace LazyCacheHelpers
     ///         no support for Garbage Collection or memory pressure re-claiming of resources.
     /// NOTE: This currently supports ONLY AbsoluteExpiration based cache item policy.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class LazyDictionaryCacheRepository : ILazyCacheRepository
+    public class LazyDictionaryCacheRepository : ILazyCacheRepository, IDisposable
     {
-        readonly ConcurrentDictionary<string, DictionaryCacheEntry> _cacheDictionary = new ConcurrentDictionary<String, DictionaryCacheEntry>();
+        private readonly ConcurrentDictionary<string, DictionaryCacheEntry> _cacheDictionary = new ConcurrentDictionary<string, DictionaryCacheEntry>();
 
         public object AddOrGetExisting(string key, object value, CacheItemPolicy cacheItemPolicy)
         {
-            var newEntry = new DictionaryCacheEntry(key, value, cacheItemPolicy);
+            var newEntry = new DictionaryCacheEntry(value, cacheItemPolicy);
 
-            var resultEntry = _cacheDictionary.AddOrUpdate(key, newEntry, (existingKey, existingEntry) =>
-            {
+            var resultEntry = _cacheDictionary.AddOrUpdate(key, newEntry, (existingKey, existingEntry)
                 //Manually enforce Absolute Expiration from the CachePolicy to support Expiring data on retrieve/update
-                return existingEntry?.CachePolicy?.AbsoluteExpiration > DateTimeOffset.UtcNow
+                => existingEntry?.CachePolicy?.AbsoluteExpiration > DateTimeOffset.UtcNow
                         ? existingEntry
-                        : newEntry;
-            });
+                        : newEntry
+            );
 
             return resultEntry.Value;
         }
 
-        public void Remove(string key)
-        {
-            _cacheDictionary.TryRemove(key, out _);
-        }
+        public void Remove(string key) => _cacheDictionary.TryRemove(key, out _);
 
-        public void ClearAll()
-        {
-            _cacheDictionary.Clear();
-        }
+        public void ClearAll() => _cacheDictionary.Clear();
 
-        public long CacheEntryCount()
-        {
-            return _cacheDictionary.Count;
-        }
+        public long CacheEntryCount() => _cacheDictionary.Count;
 
         private class DictionaryCacheEntry
         {
-            public DictionaryCacheEntry(string key, object value, CacheItemPolicy cacheItemPolicy)
+            public DictionaryCacheEntry(object value, CacheItemPolicy cacheItemPolicy)
             {
-                this.CacheKey = key;
                 this.Value = value;
                 this.CachePolicy = cacheItemPolicy;
             }
 
-            public string CacheKey { get; }
-            public object Value { get; }
-            public CacheItemPolicy CachePolicy { get; }
+            internal object Value { get; }
+            internal CacheItemPolicy CachePolicy { get; }
         }
 
+        public bool CacheItemExists(string key) => _cacheDictionary.ContainsKey(key);
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ClearAll();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

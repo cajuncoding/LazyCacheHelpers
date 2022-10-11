@@ -21,7 +21,25 @@ namespace LazyCacheHelpers
         //Added methods to CacheHelper to work with MemoryCache more easily.
         //NOTE: .Net MemoryCache supports this does NOT support Garbage Collection and Resource Reclaiming so it should
         //      be used whenever caching dynamic runtime data.
-        private static readonly LazyCacheHandler<object> _lazyCache = new LazyCacheHandler<object>();
+        private static LazyCacheHandler<object> _lazyCache = new LazyCacheHandler<object>();
+
+        /// <summary>
+        /// Overrides the current ILazyCacheRepositoryImplementation with the one provided.
+        /// NOTE: This will completely Clear and Dispose of the current Cache repository!
+        /// </summary>
+        /// <param name="customCacheRepository"></param>
+        public static void BootstrapCacheRepository(ILazyCacheRepository customCacheRepository)
+        {
+            //First get reference to our old one and initialize the new Handler...
+            var originalCacheRepository = _lazyCache;
+            _lazyCache = new LazyCacheHandler<object>(customCacheRepository);
+
+            //Now cleanup/dispose/clear the old cache to ensure resources are recoverable!
+            if (originalCacheRepository is IDisposable disposableCacheRepository)
+                disposableCacheRepository.Dispose();
+            else
+               originalCacheRepository.ClearEntireCache();
+        }
 
         /// <summary>
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
@@ -144,9 +162,9 @@ namespace LazyCacheHelpers
         {
             //Because the underlying cache is set up to store any object and the async coercion isn't as easy as the synchronous,
             //  we must wrap the original generics typed async factory into a new Func<> that matches the required type.
-            var wrappedFnValueFactory = new Func<Task<ILazySelfExpiringCacheResult<object>>>(async () => await fnAsyncValueFactory());
+            var selfExpiringWrappedFactory = new Func<Task<ILazySelfExpiringCacheResult<object>>>(async () => await fnAsyncValueFactory());
 
-            var result = (TValue)await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory);
+            var result = (TValue)await _lazyCache.GetOrAddFromCacheAsync(key, selfExpiringWrappedFactory);
             return result;
         }
 
