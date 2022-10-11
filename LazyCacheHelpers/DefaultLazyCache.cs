@@ -21,7 +21,25 @@ namespace LazyCacheHelpers
         //Added methods to CacheHelper to work with MemoryCache more easily.
         //NOTE: .Net MemoryCache supports this does NOT support Garbage Collection and Resource Reclaiming so it should
         //      be used whenever caching dynamic runtime data.
-        private static readonly LazyCacheHandler<object> _lazyCache = new LazyCacheHandler<object>();
+        private static LazyCacheHandler<object> _lazyCache = new LazyCacheHandler<object>();
+
+        /// <summary>
+        /// Overrides the current ILazyCacheRepositoryImplementation with the one provided.
+        /// NOTE: This will completely Clear and Dispose of the current Cache repository!
+        /// </summary>
+        /// <param name="customCacheRepository"></param>
+        public static void BootstrapCacheRepository(ILazyCacheRepository customCacheRepository)
+        {
+            //First get reference to our old one and initialize the new Handler...
+            var originalCacheRepository = _lazyCache;
+            _lazyCache = new LazyCacheHandler<object>(customCacheRepository);
+
+            //Now cleanup/dispose/clear the old cache to ensure resources are recoverable!
+            if (originalCacheRepository is IDisposable disposableCacheRepository)
+                disposableCacheRepository.Dispose();
+            else
+               originalCacheRepository.ClearEntireCache();
+        }
 
         /// <summary>
         /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
@@ -56,8 +74,29 @@ namespace LazyCacheHelpers
             where TValue : class
         {
             TValue result = LazyCachePolicy.IsPolicyEnabled(cacheItemPolicy)
-                                ? (TValue) _lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy)
-                                : fnValueFactory();
+                ? (TValue) _lazyCache.GetOrAddFromCache(key, fnValueFactory, cacheItemPolicy)
+                : fnValueFactory();
+            return result;
+        }
+
+        /// <summary>
+        /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
+        /// In this overload the logic must also construct and return the result as well as the cache expiration policy together
+        /// as any implementation of ILazySelfExpiringCacheResult&lt;TValue&gt; of which a default implementation can be easily
+        /// created from LazySelfExpiringCacheResult&lt;TValue&gt;.NewAbsoluteExpirationResult(...).
+        /// 
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
+        /// to initialize the item to be cached (Self-populated Cache) -- significantly improving server utilization and performance.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="fnValueFactory"></param>
+        /// <returns></returns>
+        public static TValue GetOrAddFromCache<TKey, TValue>(TKey key, Func<ILazySelfExpiringCacheResult<TValue>> fnValueFactory)
+            where TValue : class
+        {
+            var result = (TValue)_lazyCache.GetOrAddFromCache(key, fnValueFactory);
             return result;
         }
 
@@ -98,9 +137,34 @@ namespace LazyCacheHelpers
             var wrappedFnValueFactory = new Func<Task<object>>(async () => await fnAsyncValueFactory());
 
             TValue result = LazyCachePolicy.IsPolicyEnabled(cacheItemPolicy)
-                                ? (TValue) await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory, cacheItemPolicy)
-                                : await fnAsyncValueFactory();
+                ? (TValue)await _lazyCache.GetOrAddFromCacheAsync(key, wrappedFnValueFactory, cacheItemPolicy)
+                : await fnAsyncValueFactory();
 
+            return result;
+        }
+
+        /// <summary>
+        /// Add or update the cache with the specified cache key and item that will be Lazy Initialized from Lambda function/logic.
+        /// In this overload the logic must also construct and return the result as well as the cache expiration policy together
+        /// as any implementation of ILazySelfExpiringCacheResult&lt;TValue&gt; of which a default implementation can be easily
+        /// created from LazySelfExpiringCacheResult&lt;TValue&gt;.NewAbsoluteExpirationResult(...).
+        /// 
+        /// This method ensures that the item is initialized with full thread safety and that only one thread ever executes the work
+        /// to initialize the item to be cached (Self-populated Cache) -- significantly improving server utilization and performance.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="fnAsyncValueFactory"></param>
+        /// <returns></returns>
+        public static async Task<TValue> GetOrAddFromCacheAsync<TKey, TValue>(TKey key, Func<Task<ILazySelfExpiringCacheResult<TValue>>> fnAsyncValueFactory)
+            where TValue : class
+        {
+            //Because the underlying cache is set up to store any object and the async coercion isn't as easy as the synchronous,
+            //  we must wrap the original generics typed async factory into a new Func<> that matches the required type.
+            var selfExpiringWrappedFactory = new Func<Task<ILazySelfExpiringCacheResult<object>>>(async () => await fnAsyncValueFactory());
+
+            var result = (TValue)await _lazyCache.GetOrAddFromCacheAsync(key, selfExpiringWrappedFactory);
             return result;
         }
 

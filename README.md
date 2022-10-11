@@ -1,5 +1,5 @@
 # LazyCacheHelpers
-Library for leveraging the power of Lazy<T> for caching at all layers of an application with support for both 
+A very lightweight Library for leveraging the power of Lazy<T> for caching at all layers of an application with support for both 
 Sync & Async Lazy operations to maximize server utilization and performance!
 
 It also supports changing the underlying Cache Repository with different implementations via 
@@ -11,19 +11,21 @@ for migrating to distributed caches and other cache storage mechanisms easier in
 	
 The use of Lazy&lt;T&gt;, for loading/initializing of data, facilitates a self-populating cache (also known as 
 a blocking cache), so that even if many requests, for the same cached data, are triggered at the exact same 
-time, no more than one thread will ever perform the work, dramatically decreasing server utilization under high load.
-
+time, no more than one thread/request (sync or asycn) will ever perform the work -- dramatically decreasing 
+server utilization under high load.
 
 To clarify, what this means is that if many requests for the cached data are submitted at or near the same time 
-then only one thread executes the long running process while all other requests will immediately benefit from 
-the loaded data once it is ready. For example, if the long running process takes 3 seconds to complete and 10 more requests come in after 2 seconds, then all
-of the new requests will benefit from the performance of the self-populating/blocking cache after waiting for only 1 second!
+then one-and-only-one-call (thread) will execute the long running process while all other requests will immediately benefit from 
+the resulting loaded data immediately, once it is ready. For example, if the long running process takes 3 seconds to complete 
+and 10 more requests come in after 2 seconds, then all of the new requests will benefit from the performance of 
+the self-populating/blocking cache after waiting for only 1 second! Yielding higher performance and lower server utilization!
 
 The importance of the behavior becomes much more valuable as the load increases and espeically for processes
 that can take exhorbitant amounts of time (10 seconds, 30 seconds, etc.)!
 
 This library provides a completely ThreadSafe cache with Lazy loading/initialization capability in an easy to use
- implementation that can work at all levels of an application (classes, controllers, etc.).
+ implementation that can work at all levels of an application (classes, controllers, repositories, 
+ data layer, business layer, etc.).
 
 #### LazyCacheConfig Static Class
 A set of static helpers that enable working with configuration in various helpful scenarios much easier. 
@@ -44,7 +46,8 @@ To use the ConfigurationManager you just have to run this, in you application st
 
 #### Breaking Change for Reading Config values:
 To improve compatibility the built in helpers for processing AppSettings configuration values and the LazyCacheConfig
-ned to be initialized in your application startup process by defining the config reader func:
+needs to be initialized in your application startup process (app root) by defining the config reader func which
+can be easily provided as a lambda to read the config from any source you like:
 ```csharp
 LazyCacheConfig.BootstrapConfigValueReader(configKeyName => {
 	
@@ -53,9 +56,23 @@ LazyCacheConfig.BootstrapConfigValueReader(configKeyName => {
 });
 ```
 
-OR use the ConfigurationManager Bootstrap helper above if you use AppSettings; it'll wire up a default reader for you (see below)!
+OR use the ConfigurationManager Bootstrap helper above if you still use (Deprecated) AppSettings files; 
+it'll wire up a default reader for you (see below)!
 
 ## Release Notes:
+### v1.3
+- Add support for Self Expiring cache results where the value factory may now return the CachePolicy/Cache TTL/etc. along with the Cache Result.
+  - This is ideal when the cache TTL is not known ahead of time in use cases such as external API results that also return a lifespan for the data 
+      such as Auth API Tokens, etc.
+  - This should not be a breaking change as this support was now added via net new interfaces `ILazyCacheHandlerSelfExpiring<TValue>` 
+	  and `ILazySelfExpiringCacheResult<TValue>`.
+  - This can be easily invoked by not passing the CachePolicy initially and instead using the new convenience method(s) to return 
+	  your result from the value factory (e.g. `LazySelfExpiringCacheResult.From(result, secondsTTL)` which will then invoke the new overload 
+      as appropriate (*See new Example below*).
+- Added support to now easily inject/bootstrap the DefaultLazyCache static implementation with your own ILazyCacheRepository, eliminating the need to have your own
+Static implementaiton if you don't want to duplicate it; though encapsulating in your own static facade is usually a good idea.
+- Implemented IDisposable support for existing LazyCacheHandler and LazyCacheRepositories to support better cleanup of resources
+
 ### v1.2
 - Add support for Clearing the Lazy Static In-memory Cache
   - *The wrapper for Lazy caching pattern for sync or async results based on the underlying ConcurrentDictionary<Lazy<T>>).*
@@ -96,7 +113,16 @@ values from App.Config or Web.config files using System.Configuration; making th
 ## Usage of LazyCache<> with Cache Policies for Data that changes:
 It's as easy as . . .
 
-**Synchronous Caching:**
+_**Cache Keys as Strings vs Objects:**_
+
+ - *NOTE:* The following examples are very simple and therefore use Strings to construct cache keys. However, this
+can quickly result in duplication of string values. While you can implement your own helpers to create the keys
+and eliminate the duplication, it's a good practice to have `Cache Params` objects that implement the 
+`ILazyCacheKey` (means it can generate a key) and the `ILazyCachePolicy` interfaces (means it can generate a cache policy);
+it's common that the same cache params class would implement both and be passed in for both params.
+
+
+### Synchronous Caching Example:
 ```csharp
 private static readonly TimeSpan CacheFiveMinutesTTL = TimeSpan.FromMinutes(5);
 
@@ -112,7 +138,7 @@ function ComplexData GetComplexData(string variable)
 }
 ```
 
-**Aynchronous Caching:**
+### Aynchronous Caching Example:
 ```csharp
 private static readonly TimeSpan CacheFiveMinutesTTL = TimeSpan.FromMinutes(5);
 
@@ -128,17 +154,46 @@ function async Task<ComplexData> GetComplexDataAsync(string variable)
 }
 ```
 
+### Example of Caching "Self-expiring" Results:
+When the logic to generat the cached value, also results in the optimal cache expiration time, you can now return
+that along with the cache result to optimize the caching policy for these "self-expiring" cache results:
 
-## Usage of LazyStaticInMemoryCache<> for in-memory caching of data that rarely or never changegs:
+NOTE: The syntax is similar for both sync & async approaches but this example is Async (as most use cases for this will
+likely be an async I/O request).
+
+```csharp
+function async Task<ComplexData> GetComplexDataAsync(string variable)
+{
+	return await DefaultLazyCache.GetOrAddFromCache($"CacheKey::{variable}", 
+		async () => {
+			//Do any Async work you want here, or call other services/helpers/etc...
+			var complexResult = await BuildVeryComplexDataAsync(variable);
+
+			//Assuming that our complex result also knows how long the data is valid for (e.g. it's TTL)
+			var secondsTTL = complexResult.GetDataTTLSeconds();
+			
+			//Either new up or use the convenience methods to create & return 
+			//	a valid ILazySelfExpiringCacheResult<TValue>...
+			return LazySelfExpiringCacheResult.From(complexResult, secondsTTL);
+		}
+	);
+}
+```
+
+## Usage of LazyStaticInMemoryCache<> for static (non-expiring) in-memory caching of data that rarely or never changegs:
 
 The new `LazyStaticInMemoryCache<>` class makes it much easire to implement a lazy loading, blocking, in-memory cache of 
 data that rarely or never changes. Enabling the use of caching patterns much more often with less code to maintain;
 while also making the code easier to reason-about.  It also contains support for both Sync and Async value factories
 for those expensive I/O processes that initialize data that rarely or never changes.
 
-NOTE: It does support basic removal, but the `LazyStaticInMemoryCache<>` provides a patterm that is 
-best used for data that never chagnes onces loaded/initialized.  In almost all cases for data that changes, the LazyCache<> above
-with a cache expiration policy is the better pattern to use.
+NOTE: The significant difference between this and the above more robus caching feature is that this does not automatically 
+provide for any reclaming of resources by garbage collection, etc. unless manually implemented via `WeakReference` yourself.
+
+NOTE: It supports basic removal, but the `LazyStaticInMemoryCache<>` provides a pattern (of Lazy + ConcurrentDictionary) that is 
+best used for data that never chagnes once it is loaded/initialized (e.g. Reflection Results, Annotation Attribute cache, etc.).  
+In almost all cases for data that changes over it's life, the LazyCache<> above with support for cache expiration policy is the 
+better pattern to use along with it's intrinsic support of garbage collection pressure to reclaim resources.
 
 Key examples of the value of this is the, often expensive, loading of data from Reflection or reading values/configuration 
 from Annotation Attributes; whereby this pattern migitages negative performance impacts at runtime.
@@ -166,10 +221,11 @@ public class AttributeConfigReader
 		//      limited to the use use Reflection to get access to values, an Attribute, or any 
 		//      other expensive operation...
 		//NOTE: Beacuse this is a Lazy loaded blocking cache you don't providee the value, you instead
-		//NOTE: Beacuse this is a Lazy loaded blocking cache you don't providee the value, you instead
 		//      provide a value factory method that will be executed to return and initialize the value.
 		//      The key concept here is that the logic will only ever be executed at-most one time, no matter
 		//      how many or how fast multiple (e.g. hundreds/thousands) threads/reqeuests come in for that same data!
+		//NOTE: Exception handling is critical here -- because Lazy<> will cache the Exception -- and 
+		//		this class ensures that exceptions are never cached!
 		var cacheResult = _lazyAttribConfigCache.GetOrAdd(typeof(T), (key) =>
 		{
 			//NOTE: If an Exception occurs then the result will not be cached, only value values

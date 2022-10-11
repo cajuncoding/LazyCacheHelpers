@@ -19,14 +19,13 @@ namespace LazyCacheHelpers
     ///         based on the CacheItemPriority values.
     ///         https://docs.microsoft.com/en-us/dotnet/api/system.runtime.caching.cacheitempriority?view=netframework-4.7.2
     /// </summary>
-    public class LazyDotNetMemoryCacheRepository : ILazyCacheRepository
+    public class LazyDotNetMemoryCacheRepository : ILazyCacheRepository, IDisposable
     {
         private Lazy<MemoryCache> _lazyCacheHolder;
 
         public LazyDotNetMemoryCacheRepository()
             : this(null)
-        {
-        }
+        { }
 
         public LazyDotNetMemoryCacheRepository(MemoryCache memoryCache)
         {
@@ -36,19 +35,12 @@ namespace LazyCacheHelpers
         }
 
         protected virtual MemoryCache InitializeCacheInternal()
-        {
-            return new MemoryCache(nameof(LazyDotNetMemoryCacheRepository));
-        }
+            => new MemoryCache(nameof(LazyDotNetMemoryCacheRepository));
 
-        public object AddOrGetExisting(string key, object value, CacheItemPolicy cacheItemPolicy)
-        {
-            return _lazyCacheHolder.Value.AddOrGetExisting(key, value, cacheItemPolicy);
-        }
+        public object AddOrGetExisting(string key, object value, CacheItemPolicy cacheItemPolicy) 
+            => _lazyCacheHolder.Value.AddOrGetExisting(key, value, cacheItemPolicy);
 
-        public void Remove(string key)
-        {
-            _lazyCacheHolder.Value.Remove(key);
-        }
+        public void Remove(string key) => _lazyCacheHolder.Value.Remove(key);
 
         public void ClearAll()
         {
@@ -68,9 +60,24 @@ namespace LazyCacheHelpers
             }
         }
 
-        public long CacheEntryCount()
+        public long CacheEntryCount() => _lazyCacheHolder.Value.GetCount();
+
+        public bool CacheItemExists(string key) => _lazyCacheHolder.Value.Contains(key);
+
+        protected virtual void Dispose(bool disposing)
         {
-            return _lazyCacheHolder.Value.GetCount();
+            if (disposing)
+            {
+                this.ClearAll();
+                var memoryCache = _lazyCacheHolder.Value;
+                memoryCache?.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

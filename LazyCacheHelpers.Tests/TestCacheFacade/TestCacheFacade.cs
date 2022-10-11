@@ -21,6 +21,12 @@ namespace LazyCacheHelpersTests
             return result;
         }
 
+        public static string GetCachedSelfExpiringData(ILazyCacheParams cacheParams, Func<ILazySelfExpiringCacheResult<string>> fnSelfExpiringValueFactory)
+        {
+            var result = DefaultLazyCache.GetOrAddFromCache(cacheParams, fnSelfExpiringValueFactory);
+            return result;
+        }
+
         public static async Task<string> GetCachedDataAsync(ILazyCacheParams cacheParams, Func<Task<string>> fnValueFactory)
         {
             var result = await DefaultLazyCache.GetOrAddFromCacheAsync<ILazyCacheKey, string>(
@@ -29,6 +35,12 @@ namespace LazyCacheHelpersTests
                 cacheParams
             );
 
+            return result;
+        }
+
+        public static async Task<string> GetCachedSelfExpiringDataAsync(ILazyCacheParams cacheParams, Func<Task<ILazySelfExpiringCacheResult<string>>> fnSelfExpiringValueFactory)
+        {
+            var result = await DefaultLazyCache.GetOrAddFromCacheAsync(cacheParams, fnSelfExpiringValueFactory);
             return result;
         }
 
