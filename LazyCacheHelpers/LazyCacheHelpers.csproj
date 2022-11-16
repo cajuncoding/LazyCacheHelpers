@@ -11,15 +11,16 @@
 		<Description>Library for leveraging the power of the Lazy class to enable high performance caching at all layers of an application. It provides support for both Sync and Async Lazy caching operations in an extremely lightweight and simple footprint -- with passive cache coding style using Lambdas to maximize server utilization and performance with a blocking, or self-populating, cache implementation!</Description>
 		<PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
 		<PackageReleaseNotes>
-			- v1.3.1 Added support for inheriting from the new ILazySelfExpiringCacheResult&lt;TValue&gt;, with protected property setters, as well as small param naming improvements.
+			- Add support to specify custom key comparer (e.g. StringComparer.OrdinalIgnoreCase) in LazyStaticInMemoryCache.
+
+			Prior Release Notes:
+			- Added support for inheriting from the new ILazySelfExpiringCacheResult&lt;TValue&gt;, with protected property setters, as well as small param naming improvements.
 			- Add support for Self Expiring cache results that return the CachePolicy/Cache TTL/etc. along with the Cache Result; ideal when the cache TTL is not
 			known ahead of time in use cases such as external API results that also return a lifespan for the data such as Auth API Tokens, etc.
 			- This should not be a breaking change as this support was now added via net new interfaces ILazyCacheHandlerSelfExpiring and ILazySelfExpiringCacheResult.
 			- Added support to now easily inject/bootstrap the DefaultLazyCache static implementation with your own ILazyCacheRepository, eliminating the need to have your own
 			Static implementaiton if you don't want to duplicate it; though encapsulating in your own static facade is usually a good idea.
 			- Implemented IDisposable support for existing LazyCacheHandler and LazyCacheRepositories to support better cleanup of resources
-
-			Prior Release Notes:
 			- Add support for Clearing the Lazy Static In-memory Cache (wrapper for Lazy caching pattern for sync or async results based on the underlying ConcurrentDictionary&lt;Lazy&lt;T&gt;&gt;).
 			- Add support for Clearing the Cache and for getting the Cache Count; implemented for DefaultLazyCache as well as the Static In-memory caches.
 			- Restored LazyCacheConfig class capabilities for reading values dynamically from Configuration.
@@ -30,7 +31,7 @@
 			- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
 			- Initial nuget release for .Net Framework.
 		</PackageReleaseNotes>
-		<Version>1.3.1</Version>
+		<Version>1.3.2</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

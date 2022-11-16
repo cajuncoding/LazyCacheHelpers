@@ -60,7 +60,10 @@ OR use the ConfigurationManager Bootstrap helper above if you still use (Depreca
 it'll wire up a default reader for you (see below)!
 
 ## Release Notes:
-### v1.3
+### v1.3.2
+- Add support to specify custom key comparer (e.g. StringComparer.OrdinalIgnoreCase) in LazyStaticInMemoryCache.
+
+### v1.3.1
 - Add support for Self Expiring cache results where the value factory may now return the CachePolicy/Cache TTL/etc. along with the Cache Result.
   - This is ideal when the cache TTL is not known ahead of time in use cases such as external API results that also return a lifespan for the data 
       such as Auth API Tokens, etc.
