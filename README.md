@@ -194,7 +194,7 @@ NOTE: The significant difference between this and the above more robus caching f
 provide for any reclaming of resources by garbage collection, etc. unless manually implemented via `WeakReference` yourself.
 
 NOTE: It supports basic removal, but the `LazyStaticInMemoryCache<>` provides a pattern (of Lazy + ConcurrentDictionary) that is 
-best used for data that never chagnes once it is loaded/initialized (e.g. Reflection Results, Annotation Attribute cache, etc.).  
+best used for data that never changes once it is loaded/initialized (e.g. Reflection Results, Annotation Attribute cache, etc.).  
 In almost all cases for data that changes over it's life, the LazyCache<> above with support for cache expiration policy is the 
 better pattern to use along with it's intrinsic support of garbage collection pressure to reclaim resources.
 
@@ -207,7 +207,7 @@ public class AttributeConfigReader
 	[AttributeUsage(AttributeTargets.Class)]
 	private class ConfigAttribute : Attribute
 	{
-		. . . implement your design time configuration properties . . . 
+		//. . . implement your design time configuration properties . . . 
 	}
 
 	//By making the cache static it is now a global and thread-safe blocking cache; enabling only 
@@ -229,11 +229,11 @@ public class AttributeConfigReader
 		//      how many or how fast multiple (e.g. hundreds/thousands) threads/reqeuests come in for that same data!
 		//NOTE: Exception handling is critical here -- because Lazy<> will cache the Exception -- and 
 		//		this class ensures that exceptions are never cached!
-		var cacheResult = _lazyAttribConfigCache.GetOrAdd(typeof(T), (key) =>
+		var cacheResult = _lazyAttribConfigCache.GetOrAdd(typeof(T), (typeKey) =>
 		{
 			//NOTE: If an Exception occurs then the result will not be cached, only value values
 			//      will be cached (e.g. a safe response of null will be cached).
-			var configAttribute = GetConfigAttributeInternal();
+			var configAttribute = GetConfigAttributeInternal(typeKey);
 			return configAttribute;
 		});
 
