@@ -2,17 +2,30 @@
 A very lightweight Library for leveraging the power of Lazy<T> for caching at all layers of an application with support for both 
 Sync & Async Lazy operations to maximize server utilization and performance!
 
-It also supports changing the underlying Cache Repository with different implementations via 
-ILazyCacheRepository implementation. But the default implementation using .Net MemoryCache is 
-implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) 
-to enable working with MemoryCache with greatly simplified support for self-populating (Lazy) initialization.
-This implementation will work for the vast majority of medium or small projects; but this flexibility allows
-for migrating to distributed caches and other cache storage mechanisms easier in the future.
-	
-The use of Lazy&lt;T&gt;, for loading/initializing of data, facilitates a self-populating cache (also known as 
+### Give Star 🌟
+**If you like this project and/or use it the please give it a Star 🌟 (c'mon it's free, and it'll help others find the project)!**
+
+### [Buy me a Coffee ☕](https://www.buymeacoffee.com/cajuncoding)
+*I'm happy to share with the community, but if you find this useful (e.g for professional use), and are so inclinded,
+then I do love-me-some-coffee!*
+
+<a href="https://www.buymeacoffee.com/cajuncoding" target="_blank">
+<img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
+</a> 
+
+##Overview
+The use of `Lazy&lt;T&gt;`, for loading/initializing of data, facilitates a self-populating cache (also known as 
 a blocking cache), so that even if many requests, for the same cached data, are triggered at the exact same 
 time, no more than one thread/request (sync or asycn) will ever perform the work -- dramatically decreasing 
 server utilization under high load.
+
+LazyCacheHelpers also supports changing the underlying Cache Repository with different implementations via 
+`ILazyCacheRepository` implementation. But the default implementation using `.NET MemoryCache` is 
+implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) 
+along with greatly simplified support for self-populating (Lazy) initialization.
+
+The default MemoryCache based implementation will work for the vast majority of medium or small projects; but this flexibility allows
+for migrating to distributed caches and other cache storage mechanisms easier in the future.
 
 To clarify, what this means is that if many requests for the cached data are submitted at or near the same time 
 then one-and-only-one-call (thread) will execute the long running process while all other requests will immediately benefit from 
