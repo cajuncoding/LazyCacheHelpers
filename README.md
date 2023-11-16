@@ -13,7 +13,7 @@ then I do love-me-some-coffee!*
 <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
 </a> 
 
-##Overview
+## Overview
 The use of `Lazy&lt;T&gt;`, for loading/initializing of data, facilitates a self-populating cache (also known as 
 a blocking cache), so that even if many requests, for the same cached data, are triggered at the exact same 
 time, no more than one thread/request (sync or asycn) will ever perform the work -- dramatically decreasing 
