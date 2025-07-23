@@ -2,17 +2,30 @@
 A very lightweight Library for leveraging the power of Lazy<T> for caching at all layers of an application with support for both 
 Sync & Async Lazy operations to maximize server utilization and performance!
 
-It also supports changing the underlying Cache Repository with different implementations via 
-ILazyCacheRepository implementation. But the default implementation using .Net MemoryCache is 
-implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) 
-to enable working with MemoryCache with greatly simplified support for self-populating (Lazy) initialization.
-This implementation will work for the vast majority of medium or small projects; but this flexibility allows
-for migrating to distributed caches and other cache storage mechanisms easier in the future.
-	
-The use of Lazy&lt;T&gt;, for loading/initializing of data, facilitates a self-populating cache (also known as 
+### Give Star 🌟
+**If you like this project and/or use it the please give it a Star 🌟 (c'mon it's free, and it'll help others find the project)!**
+
+### [Buy me a Coffee ☕](https://www.buymeacoffee.com/cajuncoding)
+*I'm happy to share with the community, but if you find this useful (e.g for professional use), and are so inclinded,
+then I do love-me-some-coffee!*
+
+<a href="https://www.buymeacoffee.com/cajuncoding" target="_blank">
+<img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
+</a> 
+
+## Overview
+The use of `Lazy&lt;T&gt;`, for loading/initializing of data, facilitates a self-populating cache (also known as 
 a blocking cache), so that even if many requests, for the same cached data, are triggered at the exact same 
 time, no more than one thread/request (sync or asycn) will ever perform the work -- dramatically decreasing 
 server utilization under high load.
+
+LazyCacheHelpers also supports changing the underlying Cache Repository with different implementations via 
+`ILazyCacheRepository` implementation. But the default implementation using `.NET MemoryCache` is 
+implemented (via default ICacheRepository implementation as LazyDotNetMemoryCacheRepository) 
+along with greatly simplified support for self-populating (Lazy) initialization.
+
+The default MemoryCache based implementation will work for the vast majority of medium or small projects; but this flexibility allows
+for migrating to distributed caches and other cache storage mechanisms easier in the future.
 
 To clarify, what this means is that if many requests for the cached data are submitted at or near the same time 
 then one-and-only-one-call (thread) will execute the long running process while all other requests will immediately benefit from 
@@ -194,7 +207,7 @@ NOTE: The significant difference between this and the above more robus caching f
 provide for any reclaming of resources by garbage collection, etc. unless manually implemented via `WeakReference` yourself.
 
 NOTE: It supports basic removal, but the `LazyStaticInMemoryCache<>` provides a pattern (of Lazy + ConcurrentDictionary) that is 
-best used for data that never chagnes once it is loaded/initialized (e.g. Reflection Results, Annotation Attribute cache, etc.).  
+best used for data that never changes once it is loaded/initialized (e.g. Reflection Results, Annotation Attribute cache, etc.).  
 In almost all cases for data that changes over it's life, the LazyCache<> above with support for cache expiration policy is the 
 better pattern to use along with it's intrinsic support of garbage collection pressure to reclaim resources.
 
@@ -207,7 +220,7 @@ public class AttributeConfigReader
 	[AttributeUsage(AttributeTargets.Class)]
 	private class ConfigAttribute : Attribute
 	{
-		. . . implement your design time configuration properties . . . 
+		//. . . implement your design time configuration properties . . . 
 	}
 
 	//By making the cache static it is now a global and thread-safe blocking cache; enabling only 
@@ -229,11 +242,11 @@ public class AttributeConfigReader
 		//      how many or how fast multiple (e.g. hundreds/thousands) threads/reqeuests come in for that same data!
 		//NOTE: Exception handling is critical here -- because Lazy<> will cache the Exception -- and 
 		//		this class ensures that exceptions are never cached!
-		var cacheResult = _lazyAttribConfigCache.GetOrAdd(typeof(T), (key) =>
+		var cacheResult = _lazyAttribConfigCache.GetOrAdd(typeof(T), (typeKey) =>
 		{
 			//NOTE: If an Exception occurs then the result will not be cached, only value values
 			//      will be cached (e.g. a safe response of null will be cached).
-			var configAttribute = GetConfigAttributeInternal();
+			var configAttribute = GetConfigAttributeInternal(typeKey);
 			return configAttribute;
 		});
 
