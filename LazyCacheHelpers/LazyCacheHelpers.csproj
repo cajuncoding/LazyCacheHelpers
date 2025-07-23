@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+		<Version>1.3.3</Version>
 		<Copyright>Copyright (c) 2018</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Authors>BBernard / CajunCoding</Authors>
@@ -11,9 +11,12 @@
 		<Description>Library for leveraging the power of the Lazy class to enable high performance caching at all layers of an application. It provides support for both Sync and Async Lazy caching operations in an extremely lightweight and simple footprint -- with passive cache coding style using Lambdas to maximize server utilization and performance with a blocking, or self-populating, cache implementation!</Description>
 		<PackageTags>cache caching memory memorycache in-memory lazy loading load self populate populating abstraction abstract thread threadsafe thread-safe safe performance optimization optimize server utilization</PackageTags>
 		<PackageReleaseNotes>
-			- Add support to specify custom key comparer (e.g. StringComparer.OrdinalIgnoreCase) in LazyStaticInMemoryCache.
+			- Add compilation target for net6.0+ to minimize dependency footprints (remove unnecessary dependencies brought in by netstandard2.0.
+			- Update dependencies to as high as possible to resolve issues with Vulnerabilities and Deprecated versions while maintaining support for net6.0 (for now).
+
 
 			Prior Release Notes:
+			- Add support to specify custom key comparer (e.g. StringComparer.OrdinalIgnoreCase) in LazyStaticInMemoryCache.
 			- Added support for inheriting from the new ILazySelfExpiringCacheResult&lt;TValue&gt;, with protected property setters, as well as small param naming improvements.
 			- Add support for Self Expiring cache results that return the CachePolicy/Cache TTL/etc. along with the Cache Result; ideal when the cache TTL is not
 			known ahead of time in use cases such as external API results that also return a lifespan for the data such as Auth API Tokens, etc.
@@ -31,7 +34,6 @@
 			- Now fully supported as a .Net Standard 2.0 library (sans Configuration reader helpers) whereby you can specify the timespan directly for Cache Policy initialization.
 			- Initial nuget release for .Net Framework.
 		</PackageReleaseNotes>
-		<Version>1.3.2</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -40,7 +42,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
-		<PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
+		<PackageReference Include="System.Runtime.Caching" Version="8.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

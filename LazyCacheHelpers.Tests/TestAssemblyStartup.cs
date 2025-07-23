@@ -4,10 +4,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace LazyCacheHelpers.Tests
 {
     [TestClass]
-    internal class TestAssemblyStartup
+    public class TestAssemblyStartup
     {
         [AssemblyInitialize]
-        public static void AssemblyInit(TestContext context)
+        public static void AssemblyInit(TestContext testContext)
         {
             LazyCacheConfigurationManager.BootstrapConfigurationManager();
         }
